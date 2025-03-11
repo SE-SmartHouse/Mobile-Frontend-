@@ -5,20 +5,21 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.*
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.*
-import com.airbnb.lottie.compose.*
-import androidx.compose.ui.tooling.preview.Preview
+import com.example.smarthouse_mobile.ui.screen.HomeScreen
 import com.example.smarthouse_mobile.ui.screen.LandingScreen
 import com.example.smarthouse_mobile.ui.screen.SignInScreen
 import com.example.smarthouse_mobile.ui.theme.Smarthouse_mobileTheme
+import com.example.smarthouse_mobile.data.model.User
+import com.example.smarthouse_mobile.data.model.Home
+import com.example.smarthouse_mobile.data.model.Room
+import com.example.smarthouse_mobile.data.repository.MockRepository
+
+
+import com.example.smarthouse_mobile.ui.screen.RoomsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +43,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    var loggedInUser by remember { mutableStateOf<User?>(null) }
 
     NavHost(
         navController = navController,
@@ -51,7 +53,35 @@ fun AppNavigation() {
             LandingScreen(navController)
         }
         composable("signin") {
-            SignInScreen(navController)
+            SignInScreen(navController) { user ->
+                loggedInUser = user
+                navController.navigate("home") {
+                    popUpTo("signin") { inclusive = true }
+                }
+            }
+        }
+        composable("home") {
+            loggedInUser?.let { user ->
+                HomeScreen(
+                    user = user,
+                   // onAddHouseClicked = { navController.navigate("addHouse") },
+                    onHouseClicked = { house ->
+                        navController.navigate("rooms/${house.houseId}")
+                    }
+                )
+            } ?: navController.navigate("signin")
+        }
+
+        composable("rooms/{houseId}") { backStackEntry ->
+            val houseId = backStackEntry.arguments?.getString("houseId")
+            val house = MockRepository.getHouseById(houseId)
+
+            house?.let {
+                RoomsScreen(it, navController)
+            }
+        }
+        composable("addhouse") {
+
         }
     }
 }
