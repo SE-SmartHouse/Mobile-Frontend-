@@ -1,14 +1,23 @@
 package com.example.smarthouse_mobile.ui.screen
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,45 +30,43 @@ import com.example.smarthouse_mobile.data.model.Device
 fun RoomsScreen(house: Home, navController: NavController) {
     var selectedRoom by remember { mutableStateOf<Room?>(null) }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF222222)) // Dark background
+            .background(Color(0xFF222222))
             .padding(16.dp)
     ) {
-        Column {
-            Text(
-                text = house.name,
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 28.sp),
-                color = Color(0xFFFFC107) // Yellow text
-            )
+        Text(
+            text = house.name,
+            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 28.sp),
+            color = Color(0xFFFFC107)
+        )
 
-            Text(
-                text = "Rooms",
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, color = Color.Gray),
-                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
-            )
+        Text(
+            text = "Rooms",
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, color = Color.Gray),
+            modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+        )
 
-            LazyColumn {
-                items(house.rooms.size) { index ->
-                    RoomCard(room = house.rooms[index], onClick = {  selectedRoom = house.rooms[index] })
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
-            ) {
-                Text("Back to Home", color = Color.Black)
+        LazyColumn {
+            items(house.rooms.size) { index ->
+                RoomCard(room = house.rooms[index], onClick = { selectedRoom = house.rooms[index] })
             }
         }
 
-        selectedRoom?.let { room ->
-            DeviceControlDialog(room = room, onDismiss = { selectedRoom = null })
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
+        ) {
+            Text("Back to Home", color = Color.Black)
         }
+    }
+
+    selectedRoom?.let { room ->
+        DeviceGridScreen(room = room, onDismiss = { selectedRoom = null })
     }
 }
 
@@ -72,7 +79,7 @@ fun RoomCard(room: Room, onClick: () -> Unit) {
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF333333)) // Dark card
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF333333))
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -80,7 +87,7 @@ fun RoomCard(room: Room, onClick: () -> Unit) {
             Text(
                 text = room.name,
                 fontSize = 18.sp,
-                color = Color(0xFFFFC107), // Yellow title
+                color = Color(0xFFFFC107),
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(6.dp))
@@ -90,62 +97,109 @@ fun RoomCard(room: Room, onClick: () -> Unit) {
 }
 
 @Composable
-fun DeviceControlDialog(room: Room, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
-            ) {
-                Text("Close", color = Color.Black)
-            }
-        },
-        title = {
-            Text(text = room.name, color = Color(0xFFFFC107), fontSize = 22.sp)
-        },
-        text = {
-            Column {
-                if (room.devices.isEmpty()) {
-                    Text("No devices found.", color = Color.Gray)
-                } else {
-                    room.devices.forEach { device ->
-                        DeviceToggle(device = device)
-                    }
+fun DeviceGridScreen(room: Room, onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF333333))
+            .padding(16.dp)
+    ) {
+        Column {
+            Text(
+                text = "${room.name} - Devices",
+                color = Color(0xFFFFC107),
+                fontSize = 22.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyVerticalGrid(columns = GridCells.Fixed(2)) { // Grid layout (2 columns)
+                items(room.devices.size) { index ->
+                    DeviceCard(device = room.devices[index])
                 }
             }
-        },
-        containerColor = Color(0xFF333333), // Dark background
-    )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            FloatingActionButton( // Add Device Button
+                onClick = { /* TODO: Open Add Device Screen */ },
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                containerColor = Color(0xFFFFC107)
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Device", tint = Color.Black)
+            }
+        }
+
+        IconButton(
+            onClick = onDismiss,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+                .size(36.dp),
+        ) {
+            Icon(imageVector = Icons.Default.PowerSettingsNew, contentDescription = "Close", tint = Color.White)
+        }
+    }
 }
 
 @Composable
-fun DeviceToggle(device: Device) {
+fun DeviceCard(device: Device) {
     var isOn by remember { mutableStateOf(device.type) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = device.name,
-            color = Color.White,
-            fontSize = 16.sp
-        )
+    val scale = animateFloatAsState(
+        targetValue = if (isOn) 1.1f else 1f,
+        animationSpec = tween(durationMillis = 300),
+        label = ""
+    )
 
-        Switch(
-            checked = isOn,
-            onCheckedChange = {
-                isOn = it
-                device.type = it // Update device state
-            },
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color(0xFFFFC107), // Yellow toggle
-                uncheckedThumbColor = Color.Gray
+    Card(
+        modifier = Modifier
+            .padding(8.dp)
+            .scale(scale.value)
+            .background(
+                if (isOn) Color(0xFF4CAF50) else Color.Gray,
+                shape = RoundedCornerShape(12.dp)
             )
-        )
+            .clickable {
+                isOn = !isOn
+                device.type = isOn
+            },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = if (isOn) Color(0xFF4CAF50) else Color.DarkGray)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = device.name,
+                color = Color.White,
+                fontSize = 16.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            IconButton(
+                onClick = {
+                    isOn = !isOn
+                    device.type = isOn
+                },
+                modifier = Modifier
+                    .size(48.dp)
+                    .scale(scale.value)
+                    .background(
+                        if (isOn) Color(0xFFFFC107) else Color.Gray,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PowerSettingsNew,
+                    contentDescription = "Toggle Device",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
     }
 }
