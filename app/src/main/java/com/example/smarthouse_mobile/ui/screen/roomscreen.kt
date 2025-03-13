@@ -29,6 +29,7 @@ import com.example.smarthouse_mobile.data.model.Device
 @Composable
 fun RoomsScreen(house: Home, navController: NavController) {
     var selectedRoom by remember { mutableStateOf<Room?>(null) }
+    var showAddDeviceDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -66,7 +67,18 @@ fun RoomsScreen(house: Home, navController: NavController) {
     }
 
     selectedRoom?.let { room ->
-        DeviceGridScreen(room = room, onDismiss = { selectedRoom = null })
+        DeviceGridScreen(
+            room = room,
+            onDismiss = { selectedRoom = null },
+            onAddDeviceClick = { showAddDeviceDialog = true }
+        )
+    }
+
+    if (showAddDeviceDialog) {
+        AddDeviceDialog(
+            onDismiss = { showAddDeviceDialog = false },
+            onAddDevice = { /* TODO: Store device later */ }
+        )
     }
 }
 
@@ -97,7 +109,7 @@ fun RoomCard(room: Room, onClick: () -> Unit) {
 }
 
 @Composable
-fun DeviceGridScreen(room: Room, onDismiss: () -> Unit) {
+fun DeviceGridScreen(room: Room, onDismiss: () -> Unit, onAddDeviceClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -113,7 +125,7 @@ fun DeviceGridScreen(room: Room, onDismiss: () -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyVerticalGrid(columns = GridCells.Fixed(2)) { // Grid layout (2 columns)
+            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
                 items(room.devices.size) { index ->
                     DeviceCard(device = room.devices[index])
                 }
@@ -121,8 +133,8 @@ fun DeviceGridScreen(room: Room, onDismiss: () -> Unit) {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            FloatingActionButton( // Add Device Button
-                onClick = { /* TODO: Open Add Device Screen */ },
+            FloatingActionButton(
+                onClick = { onAddDeviceClick() },
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 containerColor = Color(0xFFFFC107)
             ) {
@@ -202,4 +214,33 @@ fun DeviceCard(device: Device) {
             }
         }
     }
+}
+
+@Composable
+fun AddDeviceDialog(onDismiss: () -> Unit, onAddDevice: (String) -> Unit) {
+    var deviceName by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add New Device", color = Color(0xFFFFC107)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = deviceName,
+                    onValueChange = { deviceName = it },
+                    label = { Text("Device Name") }
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onAddDevice(deviceName); onDismiss() }) {
+                Text("Add", color = Color.Black)
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel", color = Color.Black)
+            }
+        }
+    )
 }
