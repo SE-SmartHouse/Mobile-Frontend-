@@ -69,4 +69,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.6")
     implementation("com.airbnb.android:lottie-compose:6.1.0")
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-moshi:2.9.0") 
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
 }
