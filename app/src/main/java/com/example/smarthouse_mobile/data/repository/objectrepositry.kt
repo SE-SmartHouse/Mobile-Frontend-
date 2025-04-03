@@ -1,5 +1,6 @@
 package com.example.smarthouse_mobile.data.repository
 
+import android.util.Log
 import com.example.smarthouse_mobile.data.model.*
 import com.example.smarthouse_mobile.data.remote.RetrofitClient
 import kotlinx.coroutines.Dispatchers
@@ -13,12 +14,31 @@ object RemoteRepository {
         return withContext(Dispatchers.IO) {
             try {
                 val response = api.login(AuthRequest(email, password))
-                response.isSuccessful
+                if (response.isSuccessful) {
+                    Log.d("AUTH", "Login successful: ${response.body()}")
+                    true
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("AUTH", "Login failed: $errorBody")
+                    false
+                }
             } catch (e: Exception) {
+                Log.e("AUTH", "Exception during login: ${e.message}")
                 false
             }
         }
     }
+
+//    suspend fun authenticateUser(email: String, password: String): Boolean {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val response = api.login(AuthRequest(email, password))
+//                response.isSuccessful
+//            } catch (e: Exception) {
+//                false
+//            }
+//        }
+//    }
 
     suspend fun getAllHomes(): List<HomeModel> {
         return withContext(Dispatchers.IO) {

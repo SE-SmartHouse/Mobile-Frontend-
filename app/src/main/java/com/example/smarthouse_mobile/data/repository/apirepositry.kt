@@ -20,7 +20,7 @@ data class AuthRequest(
     @Json(name = "password") val password: String
 )
 data class LoginResponse(
-    @Json(name = "token") val token: String
+    @Json(name = "token") val token: String? = null
 )
 
 interface ApiService {
