@@ -1,3 +1,4 @@
+/*
 package com.example.smarthouse_mobile.data.model
 
 data class Room(
@@ -11,3 +12,4 @@ data class Device(
     val name: String,
     var type: Boolean
 )
+*/

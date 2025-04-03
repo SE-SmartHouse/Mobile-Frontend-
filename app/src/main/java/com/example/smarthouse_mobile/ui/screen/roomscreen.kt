@@ -22,13 +22,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.smarthouse_mobile.data.model.Home
+import com.example.smarthouse_mobile.data.model.Devices
+/*import com.example.smarthouse_mobile.data.model.Home
 import com.example.smarthouse_mobile.data.model.Room
-import com.example.smarthouse_mobile.data.model.Device
+import com.example.smarthouse_mobile.data.model.Device*/
+import com.example.smarthouse_mobile.data.model.HomeModel
+import com.example.smarthouse_mobile.data.model.Rooms
 
 @Composable
-fun RoomsScreen(house: Home, navController: NavController) {
-    var selectedRoom by remember { mutableStateOf<Room?>(null) }
+fun RoomsScreen(house: HomeModel, navController: NavController) {
+    var selectedRoom by remember { mutableStateOf<Rooms?>(null) }
     var showAddDeviceDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -38,7 +41,7 @@ fun RoomsScreen(house: Home, navController: NavController) {
             .padding(16.dp)
     ) {
         Text(
-            text = house.name,
+            text = house.homeName,
             style = MaterialTheme.typography.headlineLarge.copy(fontSize = 28.sp),
             color = Color(0xFFFFC107)
         )
@@ -83,7 +86,7 @@ fun RoomsScreen(house: Home, navController: NavController) {
 }
 
 @Composable
-fun RoomCard(room: Room, onClick: () -> Unit) {
+fun RoomCard(room: Rooms, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -109,7 +112,7 @@ fun RoomCard(room: Room, onClick: () -> Unit) {
 }
 
 @Composable
-fun DeviceGridScreen(room: Room, onDismiss: () -> Unit, onAddDeviceClick: () -> Unit) {
+fun DeviceGridScreen(room: Rooms, onDismiss: () -> Unit, onAddDeviceClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -155,8 +158,8 @@ fun DeviceGridScreen(room: Room, onDismiss: () -> Unit, onAddDeviceClick: () -> 
 }
 
 @Composable
-fun DeviceCard(device: Device) {
-    var isOn by remember { mutableStateOf(device.type) }
+fun DeviceCard(device: Devices) {
+    var isOn by remember { mutableStateOf(device.isOn) }
 
     val scale = animateFloatAsState(
         targetValue = if (isOn) 1.1f else 1f,
@@ -174,7 +177,7 @@ fun DeviceCard(device: Device) {
             )
             .clickable {
                 isOn = !isOn
-                device.type = isOn
+                device.isOn = isOn
             },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
@@ -195,7 +198,7 @@ fun DeviceCard(device: Device) {
             IconButton(
                 onClick = {
                     isOn = !isOn
-                    device.type = isOn
+                    device.isOn = isOn
                 },
                 modifier = Modifier
                     .size(48.dp)

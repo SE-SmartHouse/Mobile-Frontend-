@@ -5,11 +5,13 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class UserModel(
-    @Json(name = "_id") val id: String,
+    @Json(name = "userid") val id: String,
     @Json(name = "name") val name: String,
     @Json(name = "email") val email: String,
+    @Json(name = "password") val password: String,
     @Json(name = "role") val role: String,
     @Json(name = "home_id") val homeId: String
+
 )
 
 @JsonClass(generateAdapter = true)
@@ -36,13 +38,13 @@ data class EmergencyMode(
 data class Rooms(
     @Json(name = "room_id") val id: String,
     @Json(name = "room_name") val name: String,
-    @Json(name = "devices") val devices: List<Device>
+    @Json(name = "devices") val devices: List<Devices>
 )
 
 @JsonClass(generateAdapter = true)
 data class Devices(
     @Json(name = "device_name") val name: String,
-    @Json(name = "is_on") val isOn: Boolean
+    @Json(name = "is_on") var isOn: Boolean
 )
 
 data class StatusUpdate(

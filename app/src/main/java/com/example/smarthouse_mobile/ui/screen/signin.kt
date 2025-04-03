@@ -12,29 +12,38 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.smarthouse_mobile.data.model.User
-import com.example.smarthouse_mobile.data.repository.MockRepository
+import com.example.smarthouse_mobile.data.model.HomeModel
+import com.example.smarthouse_mobile.data.repository.RemoteRepository
+import kotlinx.coroutines.launch
+
+
+var authtoken = ""
+
 
 @Composable
-fun SignInScreen(navController: NavController, onLoginSuccess: (User) -> Unit) {
+fun SignInScreen(navController: NavController, onLoginSuccess: (List<HomeModel>) -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF222222)), // Dark background
-        contentAlignment = Alignment.Center // Centers the content
+            .background(Color(0xFF222222)),
+        contentAlignment = Alignment.Center
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(24.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF333333)) // Dark Grey card
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF333333))
         ) {
             Column(
                 modifier = Modifier
@@ -45,7 +54,7 @@ fun SignInScreen(navController: NavController, onLoginSuccess: (User) -> Unit) {
                 Text(
                     "Sign In",
                     fontSize = 26.sp,
-                    color = Color(0xFFFFC107), // Yellow text
+                    color = Color(0xFFFFC107),
                     style = MaterialTheme.typography.headlineLarge
                 )
 
@@ -54,7 +63,7 @@ fun SignInScreen(navController: NavController, onLoginSuccess: (User) -> Unit) {
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email", color = Color(0xFFFFC107)) }, // Yellow label
+                    label = { Text("Email", color = Color(0xFFFFC107)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -86,12 +95,20 @@ fun SignInScreen(navController: NavController, onLoginSuccess: (User) -> Unit) {
 
                 Button(
                     onClick = {
-                        val user = MockRepository.authenticateUser(email, password)
-                        if (user != null) {
-                            onLoginSuccess(user)
-                            navController.navigate("home")
-                        } else {
-                            errorMessage = "Invalid username or password"
+                        coroutineScope.launch {
+                            isLoading = true
+                            errorMessage = null
+                            val loginSuccess = RemoteRepository.authenticateUser(email, password)
+                            isLoading = false
+
+                            if (loginSuccess) {
+
+                                val homes = RemoteRepository.getAllHomes()
+                                onLoginSuccess(homes)
+                                navController.navigate("home")
+                            } else {
+                                errorMessage = "Invalid username or password"
+                            }
                         }
                     },
                     modifier = Modifier
@@ -99,7 +116,11 @@ fun SignInScreen(navController: NavController, onLoginSuccess: (User) -> Unit) {
                         .height(50.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
                 ) {
-                    Text("Sign In", color = Color.Black)
+                    if (isLoading) {
+                        CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
+                    } else {
+                        Text("Sign In", color = Color.Black)
+                    }
                 }
 
                 errorMessage?.let {
