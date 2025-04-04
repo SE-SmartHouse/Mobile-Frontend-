@@ -20,18 +20,29 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smarthouse_mobile.R
-import com.example.smarthouse_mobile.data.model.Home
-import com.example.smarthouse_mobile.data.model.User
-import com.example.smarthouse_mobile.data.repository.MockRepository
+import com.example.smarthouse_mobile.data.model.HomeModel
+import com.example.smarthouse_mobile.data.model.UserModel
+import com.example.smarthouse_mobile.data.repository.RemoteRepository
+import com.example.smarthouse_mobile.data.repository.RemoteRepository.sessionToken
+import kotlinx.coroutines.launch
+
 
 @Composable
 fun HomeScreen(
-    user: User,
-    onHouseClicked: (Home) -> Unit
+    user: UserModel,
+    onHouseClicked: (HomeModel) -> Unit
 ) {
-    var houses by remember { mutableStateOf(MockRepository.getHousesForUser(user)) }
+    var houses by remember { mutableStateOf<List<HomeModel>>(emptyList()) }
     var showAddDialog by remember { mutableStateOf(false) }
-    var houseToDelete by remember { mutableStateOf<Home?>(null) }
+    var houseToDelete by remember { mutableStateOf<HomeModel?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+
+    LaunchedEffect(sessionToken) {
+        coroutineScope.launch {
+            houses = RemoteRepository.getAllHomes(sessionToken)
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -44,7 +55,7 @@ fun HomeScreen(
                 .padding(horizontal = 16.dp, vertical = 24.dp)
         ) {
             Text(
-                text = "Hi, ${user.username} 👋",
+                text = "Hi, ${user.name} 👋",
                 style = MaterialTheme.typography.headlineLarge.copy(fontSize = 28.sp),
                 color = Color(0xFFFFC107) // Yellow for greeting text
             )
@@ -88,16 +99,18 @@ fun HomeScreen(
         }
     }
 
-    // Add House Dialog
-    if (showAddDialog) {
-        AddHouseDialog(
-            onDismiss = { showAddDialog = false },
-            onAddHouse = { houseName ->
-                houses = houses + Home(name = houseName, houseId = "house " + (user.houseIds.size +1), rooms = emptyList(), unassignedDevices = emptyList())
-                showAddDialog = false
-            }
-        )
-    }
+    /*
+        // Add House Dialog
+        if (showAddDialog) {
+            AddHouseDialog(
+                onDismiss = { showAddDialog = false },
+                onAddHouse = { houseName ->
+                    houses = houses + HomeModel(homeName = houseName, id = "house " + (user.homeId.length +1), rooms = emptyList(), address = , unassignedDevices = emptyList())
+                    showAddDialog = false
+                }
+            )
+        }
+    */
 
     // Delete Confirmation Dialog
     houseToDelete?.let { house ->
@@ -113,7 +126,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun HouseCard(house: Home, onHouseClicked: (Home) -> Unit, onDeleteHouse: () -> Unit) {
+fun HouseCard(house: HomeModel, onHouseClicked: (HomeModel) -> Unit, onDeleteHouse: () -> Unit) {
     Card(
         onClick = { onHouseClicked(house) },
         modifier = Modifier
@@ -154,7 +167,7 @@ fun HouseCard(house: Home, onHouseClicked: (Home) -> Unit, onDeleteHouse: () -> 
 
                 Column {
                     Text(
-                        text = house.name,
+                        text = house.homeName,
                         fontSize = 18.sp,
                         color = Color(0xFFFFC107), // Yellow text for house name
                         style = MaterialTheme.typography.titleMedium
@@ -203,7 +216,7 @@ fun AddHouseDialog(onDismiss: () -> Unit, onAddHouse: (String) -> Unit) {
 }
 
 @Composable
-fun DeleteHouseDialog(house: Home, onConfirmDelete: () -> Unit, onDismiss: () -> Unit) {
+fun DeleteHouseDialog(house: HomeModel, onConfirmDelete: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -217,6 +230,6 @@ fun DeleteHouseDialog(house: Home, onConfirmDelete: () -> Unit, onDismiss: () ->
             }
         },
         title = { Text("Delete House?") },
-        text = { Text("Are you sure you want to delete ${house.name}? This action cannot be undone.") }
+        text = { Text("Are you sure you want to delete ${house.homeName}? This action cannot be undone.") }
     )
 }
