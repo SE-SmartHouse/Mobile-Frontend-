@@ -3,6 +3,8 @@ package com.example.smarthouse_mobile.data.repository
 import com.example.smarthouse_mobile.data.model.HomeModel
 import com.example.smarthouse_mobile.data.model.Rooms
 import com.example.smarthouse_mobile.data.model.Devices
+import com.example.smarthouse_mobile.data.model.NewRoomRequest
+import com.example.smarthouse_mobile.data.model.RoomNameRequest
 import com.example.smarthouse_mobile.data.model.StatusUpdate
 import com.example.smarthouse_mobile.data.model.UserModel
 import com.example.smarthouse_mobile.data.remote.RetrofitClient
@@ -14,13 +16,80 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 
+data class AuthRequest(
+    @Json(name = "email") val email: String,
+    @Json(name = "password") val password: String
+)
 
+data class RegisterRequest(
+    @Json(name = "name") val name: String,
+    @Json(name = "email") val email: String,
+    @Json(name = "password") val password: String
+)
+
+data class LoginResponse(
+    @Json(name = "token") val token: String?
+)
+
+interface ApiService {
+
+    @POST("auth/register")
+    suspend fun register(@Body request: RegisterRequest): Response<Unit>
+
+    @POST("auth/login")
+    suspend fun login(@Body request: AuthRequest): Response<LoginResponse>
+
+    @GET("users/homes")
+    suspend fun getHomes(
+        @Header("Cookie") token: String
+    ): Response<List<HomeModel>>
+
+    @GET("homes/{homeId}/rooms")
+    suspend fun getRooms(
+        @Path("homeId") homeId: String,
+        @Header("Cookie") token: String
+    ): Response<List<Rooms>>
+
+    @GET("rooms/{roomId}/devices")
+    suspend fun getDevices(
+        @Path("roomId") roomId: String,
+        @Header("Cookie") token: String
+    ): Response<List<Devices>>
+
+    @POST("devices/{deviceId}/status")
+    suspend fun postDeviceStatus(
+        @Path("deviceId") deviceId: String,
+        @Header("Cookie") token: String,
+        @Body statusUpdate: StatusUpdate
+    ): Response<Unit>
+
+    @POST("rooms/{roomId}/devices/{deviceId}/move")
+    suspend fun moveDeviceToAnotherRoom(
+        @Path("roomId") roomId: String,
+        @Path("deviceId") deviceId: String,
+        @Header("Cookie") token: String,
+        @Body newRoom: NewRoomRequest
+    ): Response<Unit>
+
+    @GET("homes/{homeId}")
+    suspend fun getHome(@Path("homeId") homeId: String): Response<HomeModel>
+
+    @POST("homes/{homeId}/rooms/add")
+    suspend fun createRoom(
+        @Path("homeId") homeId: String,
+        @Header("Cookie") token: String,
+        @Body roomName: RoomNameRequest
+    ): Response<Unit>
+}
+
+
+/*
 data class AuthRequest(
     @Json(name = "email") val email: String,
     @Json(name = "password") val password: String
 )
 data class LoginResponse(
-    @Json(name = "token") val token: String? = null
+    @Json(name = "token") val token: String?
 )
 
 interface ApiService {
@@ -72,3 +141,4 @@ interface ApiService {
         @Body roomName: String,
     ): Response<Unit>
 }
+*/

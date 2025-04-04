@@ -1,6 +1,7 @@
 package com.example.smarthouse_mobile
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,7 +24,6 @@ import com.example.smarthouse_mobile.data.repository.RemoteRepository
 
 
 import com.example.smarthouse_mobile.ui.screen.RoomsScreen
-import com.example.smarthouse_mobile.ui.screen.authtoken
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +57,9 @@ fun AppNavigation() {
             LandingScreen(navController)
         }
         composable("signin") {
-            SignInScreen(navController) {
+            SignInScreen(navController) { sessionToken, user ->
+                Log.d("SignIn", "Login successful, token: $sessionToken")
+                loggedInUser = user
                 navController.navigate("home") {
                     popUpTo("signin") { inclusive = true }
                 }
@@ -68,15 +70,14 @@ fun AppNavigation() {
                 HomeScreen(
                     user = user,
                     onHouseClicked = { home ->
-                        navController.navigate("rooms/${user.homeId}")
+                        navController.navigate("rooms/${home.id}")
                     }
                 )
             } ?: navController.navigate("signin")
         }
         composable("rooms/{houseId}") { backStackEntry ->
             val houseId = backStackEntry.arguments?.getString("houseId")
-
-            var house by remember {mutableStateOf<HomeModel?>(null) }
+            var house by remember { mutableStateOf<HomeModel?>(null) }
 
             LaunchedEffect(houseId) {
                 houseId?.let {
@@ -86,7 +87,7 @@ fun AppNavigation() {
 
             house?.let {
                 RoomsScreen(it, navController)
-            } ?: navController.navigate("home") // Redirect to home if house not found
+            } ?: navController.navigate("home")
         }
     }
 }

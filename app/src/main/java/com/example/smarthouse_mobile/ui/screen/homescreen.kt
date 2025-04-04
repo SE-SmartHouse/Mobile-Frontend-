@@ -23,6 +23,8 @@ import com.example.smarthouse_mobile.R
 import com.example.smarthouse_mobile.data.model.HomeModel
 import com.example.smarthouse_mobile.data.model.UserModel
 import com.example.smarthouse_mobile.data.repository.RemoteRepository
+import com.example.smarthouse_mobile.data.repository.RemoteRepository.sessionToken
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -33,9 +35,13 @@ fun HomeScreen(
     var houses by remember { mutableStateOf<List<HomeModel>>(emptyList()) }
     var showAddDialog by remember { mutableStateOf(false) }
     var houseToDelete by remember { mutableStateOf<HomeModel?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        houses = RemoteRepository.getAllHomes()
+
+    LaunchedEffect(sessionToken) {
+        coroutineScope.launch {
+            houses = RemoteRepository.getAllHomes(sessionToken)
+        }
     }
 
     Box(
@@ -93,18 +99,18 @@ fun HomeScreen(
         }
     }
 
-/*
-    // Add House Dialog
-    if (showAddDialog) {
-        AddHouseDialog(
-            onDismiss = { showAddDialog = false },
-            onAddHouse = { houseName ->
-                houses = houses + HomeModel(homeName = houseName, id = "house " + (user.homeId.length +1), rooms = emptyList(), address = , unassignedDevices = emptyList())
-                showAddDialog = false
-            }
-        )
-    }
-*/
+    /*
+        // Add House Dialog
+        if (showAddDialog) {
+            AddHouseDialog(
+                onDismiss = { showAddDialog = false },
+                onAddHouse = { houseName ->
+                    houses = houses + HomeModel(homeName = houseName, id = "house " + (user.homeId.length +1), rooms = emptyList(), address = , unassignedDevices = emptyList())
+                    showAddDialog = false
+                }
+            )
+        }
+    */
 
     // Delete Confirmation Dialog
     houseToDelete?.let { house ->

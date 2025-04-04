@@ -15,15 +15,17 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.smarthouse_mobile.data.model.HomeModel
+import com.example.smarthouse_mobile.data.model.UserModel
 import com.example.smarthouse_mobile.data.repository.RemoteRepository
 import kotlinx.coroutines.launch
 
 
-var authtoken = ""
+
 
 
 @Composable
-fun SignInScreen(navController: NavController, onLoginSuccess: (List<HomeModel>) -> Unit) {
+
+fun SignInScreen(navController: NavController, onLoginSuccess: (String, UserModel) -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -98,18 +100,29 @@ fun SignInScreen(navController: NavController, onLoginSuccess: (List<HomeModel>)
                         coroutineScope.launch {
                             isLoading = true
                             errorMessage = null
-                            val loginSuccess = RemoteRepository.authenticateUser(email, password)
+                            val success = RemoteRepository.authenticateUser(email, password)
                             isLoading = false
 
-                            if (loginSuccess) {
+                            if (success) {
+                                val homes = RemoteRepository.getAllHomes(RemoteRepository.sessionToken)
 
-                                val homes = RemoteRepository.getAllHomes()
-                                onLoginSuccess(homes)
-                                navController.navigate("home")
+                                val user = UserModel(
+                                    id = "user-id", // replace with actual ID if backend returns it, else dummy for now
+                                    name = email.substringBefore("@"),
+                                    email = email,
+                                    password = password,
+                                    role = "user", // or "admin" if applicable
+                                    homeId = homes.firstOrNull()?.id ?: ""
+                                )
+                                onLoginSuccess(RemoteRepository.sessionToken, user)
+                                navController.navigate("home") {
+                                    popUpTo("signin") { inclusive = true }
+                                }
                             } else {
-                                errorMessage = "Invalid username or password"
+                                errorMessage = "No homes found for this user"
                             }
                         }
+
                     },
                     modifier = Modifier
                         .fillMaxWidth()
