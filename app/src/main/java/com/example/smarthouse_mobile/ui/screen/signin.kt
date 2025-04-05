@@ -101,7 +101,7 @@ fun SignInScreen(navController: NavController, onLoginSuccess: (String, UserMode
                             isLoading = false
 
                             if (success) {
-                                val homes = RemoteRepository.getAllHomes(RemoteRepository.sessionToken)
+                                val homes = RemoteRepository.getAllHomes()
                                 val user = UserModel(
                                     id = "",
                                     name = email.substringBefore("@"),

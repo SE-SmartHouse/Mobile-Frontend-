@@ -1,10 +1,14 @@
 package com.example.smarthouse_mobile.data.repository
 
+import android.util.Log
 import com.example.smarthouse_mobile.data.model.*
 import com.example.smarthouse_mobile.data.remote.RetrofitClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import android.util.Log
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 
 object RemoteRepository {
     private val api = RetrofitClient.instance
@@ -15,7 +19,6 @@ object RemoteRepository {
         return withContext(Dispatchers.IO) {
             try {
                 val response = api.login(AuthRequest(email, password))
-
                 if (response.isSuccessful) {
                     val rawCookie = response.headers()["Set-Cookie"]
                     val extractedToken =
@@ -40,69 +43,85 @@ object RemoteRepository {
         }
     }
 
-    // ✅ These functions should be defined OUTSIDE authenticateUser()
-    suspend fun getAllHomes(sessionToken1: String): List<HomeModel> {
+    suspend fun getAllHomes(): List<HomeModel> {
         return withContext(Dispatchers.IO) {
             val response = api.getHomes(sessionToken)
-            if (response.isSuccessful) {
-                response.body() ?: emptyList()
-            } else {
+            if (response.isSuccessful) response.body() ?: emptyList()
+            else {
+                Log.e("HOMES", "Failed to fetch homes: ${response.code()} ${response.message()}")
                 emptyList()
             }
         }
     }
 
-    suspend fun getHomeById(homeId: String): HomeModel? {
+    suspend fun createHome(homeName: String, address: String): HomeModel? {
         return withContext(Dispatchers.IO) {
-            val response = api.getHome(homeId)
+            val response = api.addHome(sessionToken, AddHomeRequest(homeName, address))
             if (response.isSuccessful) response.body() else null
         }
     }
 
-    suspend fun getRoomsForHome(homeId: String): List<Rooms> {
+    suspend fun getRoomsForHome(homeId: String): List<RoomModel> {
         return withContext(Dispatchers.IO) {
-            val response = api.getRooms(homeId)
-            if (response.isSuccessful) {
-                response.body() ?: emptyList()
-            } else {
+            try {
+                val response = api.getRooms(homeId)
+                if (response.isSuccessful) {
+                    response.body() ?: emptyList()
+                } else {
+                    Log.e("Rooms", "Error: ${response.code()}")
+                    emptyList()
+                }
+            } catch (e: Exception) {
+                Log.e("Rooms", "Exception: ${e.message}")
                 emptyList()
             }
         }
     }
 
-    suspend fun getDevicesForRoom(roomId: String): List<Devices> {
+    suspend fun getDevicesForRoom(roomId: String): List<DeviceModel> {
         return withContext(Dispatchers.IO) {
-            val response = api.getDevices(roomId)
-            if (response.isSuccessful) {
-                response.body() ?: emptyList()
-            } else {
+            try {
+                val response = api.getDevices(roomId, sessionToken)
+                if (response.isSuccessful) {
+                    response.body() ?: emptyList()
+                } else {
+                    Log.e("Devices", "Error: ${response.code()} ${response.message()}")
+                    emptyList()
+                }
+            } catch (e: Exception) {
+                Log.e("Devices", "Exception: ${e.message}")
                 emptyList()
             }
         }
     }
 
-    suspend fun updateDeviceStatus(deviceId: String, status: Boolean): Boolean {
+    suspend fun createRoom(homeId: String, roomName: String, floorNumber: Int): Boolean {
         return withContext(Dispatchers.IO) {
-            val response = api.postDeviceStatus(deviceId, StatusUpdate(status))
-            response.isSuccessful
+            try {
+                val request = AddRoomRequest(roomName, floorNumber)
+                val response = api.addRoom(homeId, sessionToken, request)
+                response.isSuccessful
+            } catch (e: Exception) {
+                Log.e("CreateRoom", "Error: ${e.message}")
+                false
+            }
         }
     }
 
-    suspend fun moveDeviceToAnotherRoom(
-        roomId: String,
-        deviceId: String,
-        newRoomId: String
-    ): Boolean {
+    suspend fun toggleDeviceStatus(deviceId: String, newStatus: String): Boolean {
         return withContext(Dispatchers.IO) {
-            val response = api.moveDeviceToAnotherRoom(roomId, deviceId, newRoomId)
-            response.isSuccessful
-        }
-    }
+            try {
+                val json = JSONObject().apply {
+                    put("status", newStatus)
+                }
+                val body = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
 
-    suspend fun createRoom(homeId: String, roomName: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            val response = api.createRoom(homeId, roomName)
-            response.isSuccessful
+                val response = api.toggleDeviceStatus(deviceId, body)
+                response.isSuccessful
+            } catch (e: Exception) {
+                Log.e("ToggleDevice", "Error: ${e.message}")
+                false
+            }
         }
     }
 }

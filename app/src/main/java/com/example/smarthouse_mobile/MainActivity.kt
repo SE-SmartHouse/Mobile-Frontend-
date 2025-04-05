@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.example.smarthouse_mobile.ui.screen.HomeScreen
 import com.example.smarthouse_mobile.ui.screen.LandingScreen
 import com.example.smarthouse_mobile.ui.screen.SignInScreen
@@ -57,6 +59,7 @@ fun AppNavigation() {
         composable("landing") {
             LandingScreen(navController)
         }
+
         composable("signin") {
             SignInScreen(navController) { sessionToken, user ->
                 Log.d("SignIn", "Login successful, token: $sessionToken")
@@ -66,30 +69,27 @@ fun AppNavigation() {
                 }
             }
         }
+
         composable("home") {
             loggedInUser?.let { user ->
                 HomeScreen(
                     user = user,
                     onHouseClicked = { home ->
-                        navController.navigate("rooms/${user.homeId}")
+                        navController.navigate("rooms/${home.id}")
                     }
                 )
             } ?: navController.navigate("signin")
         }
-        composable("rooms/{houseId}") { backStackEntry ->
+
+        composable(
+            route = "rooms/{houseId}",
+            arguments = listOf(navArgument("houseId") { type = NavType.StringType })
+        ) { backStackEntry ->
             val houseId = backStackEntry.arguments?.getString("houseId")
 
-            var house by remember {mutableStateOf<HomeModel?>(null) }
-
-            LaunchedEffect(houseId) {
-                houseId?.let {
-                    house = RemoteRepository.getHomeById(it)
-                }
-            }
-
-            house?.let {
-                RoomsScreen(it, navController)
-            } ?: navController.navigate("home") // Redirect to home if house not found
+            houseId?.let {
+                RoomsScreen(homeId = it, navController = navController)
+            } ?: navController.navigate("home")
         }
     }
 }
