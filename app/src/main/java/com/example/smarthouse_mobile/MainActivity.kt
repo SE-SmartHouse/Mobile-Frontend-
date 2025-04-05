@@ -22,6 +22,7 @@ import com.example.smarthouse_mobile.data.model.Room*/
 import com.example.smarthouse_mobile.data.model.UserModel
 import com.example.smarthouse_mobile.data.model.HomeModel
 import com.example.smarthouse_mobile.data.repository.RemoteRepository
+import com.example.smarthouse_mobile.ui.screen.DeviceScreen
 //import com.example.smarthouse_mobile.data.repository.MockRepository
 
 
@@ -86,10 +87,24 @@ fun AppNavigation() {
             arguments = listOf(navArgument("houseId") { type = NavType.StringType })
         ) { backStackEntry ->
             val houseId = backStackEntry.arguments?.getString("houseId")
-
             houseId?.let {
-                RoomsScreen(homeId = it, navController = navController)
+                RoomsScreen(
+                    homeId = it,
+                    navController = navController // ⬅ used for navigating to device screen
+                )
             } ?: navController.navigate("home")
+        }
+
+        composable(
+            route = "devices/{roomId}/{roomName}",
+            arguments = listOf(
+                navArgument("roomId") { type = NavType.StringType },
+                navArgument("roomName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
+            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
+            DeviceScreen(roomId = roomId, roomName = roomName)
         }
     }
 }

@@ -25,7 +25,6 @@ fun RoomsScreen(homeId: String, navController: NavController) {
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
-
     var newRoomName by remember { mutableStateOf("") }
 
     fun fetchRooms() {
@@ -55,9 +54,7 @@ fun RoomsScreen(homeId: String, navController: NavController) {
         }
     }
 
-    LaunchedEffect(Unit) {
-        fetchRooms()
-    }
+    LaunchedEffect(Unit) { fetchRooms() }
 
     Box(
         modifier = Modifier
@@ -66,11 +63,7 @@ fun RoomsScreen(homeId: String, navController: NavController) {
             .padding(16.dp)
     ) {
         Column {
-            Text(
-                "Rooms",
-                color = Color(0xFFFFC107),
-                style = MaterialTheme.typography.headlineLarge
-            )
+            Text("Rooms", color = Color(0xFFFFC107), style = MaterialTheme.typography.headlineLarge)
             Spacer(modifier = Modifier.height(16.dp))
 
             when {
@@ -79,12 +72,12 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                 rooms.isEmpty() -> Text("No rooms found.", color = Color.Gray)
                 else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(rooms) { room ->
-                        RoomCard(room) { deviceId ->
-                            scope.launch {
-                                RemoteRepository.toggleDeviceStatus(deviceId, room.id)
-                                fetchRooms()
+                        RoomCard(
+                            room = room,
+                            onClick = {
+                                navController.navigate("devices/${room.id}/${room.name}")
                             }
-                        }
+                        )
                     }
                 }
             }
@@ -115,7 +108,8 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                 },
                 confirmButton = {
                     TextButton(onClick = { addRoom() }) {
-                        Text("Add", color = Color(0xFFFFC107))
+
+                    Text("Add", color = Color(0xFFFFC107))
                     }
                 },
                 dismissButton = {
@@ -130,8 +124,9 @@ fun RoomsScreen(homeId: String, navController: NavController) {
 }
 
 @Composable
-fun RoomCard(room: RoomModel, onToggleDevice: (String) -> Unit) {
+fun RoomCard(room: RoomModel, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -139,8 +134,6 @@ fun RoomCard(room: RoomModel, onToggleDevice: (String) -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(room.name, color = Color.White, style = MaterialTheme.typography.titleLarge)
             Text("Floor ${room.floorNumber}", color = Color.Gray)
-            Spacer(modifier = Modifier.height(12.dp))
-
         }
     }
 }
