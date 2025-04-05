@@ -63,21 +63,14 @@ object RemoteRepository {
 
     suspend fun getRoomsForHome(homeId: String): List<RoomModel> {
         return withContext(Dispatchers.IO) {
-            try {
-                val response = api.getRooms(homeId)
-                if (response.isSuccessful) {
-                    response.body() ?: emptyList()
-                } else {
-                    Log.e("Rooms", "Error: ${response.code()}")
-                    emptyList()
-                }
-            } catch (e: Exception) {
-                Log.e("Rooms", "Exception: ${e.message}")
+            val response = api.getRooms(homeId, sessionToken)
+            if (response.isSuccessful) response.body() ?: emptyList()
+            else {
+                Log.e("Rooms", "Error: ${response.code()}")
                 emptyList()
             }
         }
     }
-
     suspend fun getDevicesForRoom(roomId: String): List<DeviceModel> {
         return withContext(Dispatchers.IO) {
             try {
@@ -95,14 +88,15 @@ object RemoteRepository {
         }
     }
 
-    suspend fun createRoom(homeId: String, roomName: String, floorNumber: Int): Boolean {
+    suspend fun createRoom(homeId: String, roomName: String): Boolean {
         return withContext(Dispatchers.IO) {
             try {
-                val request = AddRoomRequest(roomName, floorNumber)
+                val request = AddRoomRequest(newRoomName = roomName)
                 val response = api.addRoom(homeId, sessionToken, request)
+                Log.d("AddRoom", "Status: ${response.code()}, Success: ${response.isSuccessful}")
                 response.isSuccessful
             } catch (e: Exception) {
-                Log.e("CreateRoom", "Error: ${e.message}")
+                Log.e("AddRoom", "Error: ${e.message}")
                 false
             }
         }

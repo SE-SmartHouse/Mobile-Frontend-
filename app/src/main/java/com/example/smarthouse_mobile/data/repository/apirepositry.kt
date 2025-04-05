@@ -77,12 +77,9 @@ interface ApiService {
 
     @GET("homes/{homeId}/rooms")
     suspend fun getRooms(
-        @Path("homeId") homeId: String
+        @Path("homeId") homeId: String,
+        @Header("Cookie") token: String
     ): Response<List<RoomModel>>
-
-
-    @GET("homes/{homeId}/rooms")
-    suspend fun getRooms( @Path("roomId") roomId: String,@Header("Cookie") token: String): Response<List<RoomModel>>
 
 
     @GET("rooms/{roomId}/devices")
@@ -114,7 +111,6 @@ interface ApiService {
         @Path("deviceId") deviceId: String,
         @Body newRoomId: String,
     ): Response<Unit>
-
 
     @POST("homes/{homeId}/rooms/add")
     suspend fun createRoom(

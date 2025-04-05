@@ -20,22 +20,43 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun RoomsScreen(homeId: String, navController: NavController) {
-    val coroutineScope = rememberCoroutineScope()
-
+    val scope = rememberCoroutineScope()
     var rooms by remember { mutableStateOf<List<RoomModel>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
 
     var newRoomName by remember { mutableStateOf("") }
-    var newRoomFloor by remember { mutableStateOf("") }
+
+    fun fetchRooms() {
+        scope.launch {
+            loading = true
+            error = null
+            try {
+                rooms = RemoteRepository.getRoomsForHome(homeId)
+            } catch (e: Exception) {
+                error = e.message ?: "Unknown error"
+            } finally {
+                loading = false
+            }
+        }
+    }
+
+    fun addRoom() {
+        scope.launch {
+            if (newRoomName.isNotBlank()) {
+                val success = RemoteRepository.createRoom(homeId, newRoomName.trim())
+                if (success) {
+                    fetchRooms()
+                    showAddDialog = false
+                    newRoomName = ""
+                }
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
-        fetchRooms(homeId) { r, e ->
-            rooms = r
-            error = e
-            loading = false
-        }
+        fetchRooms()
     }
 
     Box(
@@ -45,7 +66,11 @@ fun RoomsScreen(homeId: String, navController: NavController) {
             .padding(16.dp)
     ) {
         Column {
-            Text("Rooms", color = Color(0xFFFFC107), style = MaterialTheme.typography.headlineLarge)
+            Text(
+                "Rooms",
+                color = Color(0xFFFFC107),
+                style = MaterialTheme.typography.headlineLarge
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
             when {
@@ -55,12 +80,9 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                 else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(rooms) { room ->
                         RoomCard(room) { deviceId ->
-                            coroutineScope.launch {
+                            scope.launch {
                                 RemoteRepository.toggleDeviceStatus(deviceId, room.id)
-                                fetchRooms(homeId) { r, e ->
-                                    rooms = r
-                                    error = e
-                                }
+                                fetchRooms()
                             }
                         }
                     }
@@ -79,27 +101,29 @@ fun RoomsScreen(homeId: String, navController: NavController) {
         }
 
         if (showAddDialog) {
-            AddRoomDialog(
-                newRoomName,
-                newRoomFloor,
-                onNameChange = { newRoomName = it },
-                onFloorChange = { newRoomFloor = it },
-                onDismiss = { showAddDialog = false },
-                onAddRoom = {
-                    val floor = newRoomFloor.toIntOrNull() ?: 1
-                    coroutineScope.launch {
-                        val success = RemoteRepository.createRoom(homeId, newRoomName, floor)
-                        if (success) {
-                            fetchRooms(homeId) { r, e ->
-                                rooms = r
-                                error = e
-                            }
-                            showAddDialog = false
-                            newRoomName = ""
-                            newRoomFloor = ""
-                        }
+            AlertDialog(
+                onDismissRequest = { showAddDialog = false },
+                title = { Text("Add New Room", color = Color.White) },
+                text = {
+                    OutlinedTextField(
+                        value = newRoomName,
+                        onValueChange = { newRoomName = it },
+                        label = { Text("Room Name", color = Color.White) },
+                        textStyle = LocalTextStyle.current.copy(color = Color.White),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { addRoom() }) {
+                        Text("Add", color = Color(0xFFFFC107))
                     }
-                }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showAddDialog = false }) {
+                        Text("Cancel", color = Color.White)
+                    }
+                },
+                containerColor = Color(0xFF333333)
             )
         }
     }
@@ -117,9 +141,6 @@ fun RoomCard(room: RoomModel, onToggleDevice: (String) -> Unit) {
             Text("Floor ${room.floorNumber}", color = Color.Gray)
             Spacer(modifier = Modifier.height(12.dp))
 
-            room.devices.forEach { device ->
-                DeviceItem(device, onToggle = { onToggleDevice(device.id) })
-            }
         }
     }
 }
@@ -143,57 +164,5 @@ fun DeviceItem(device: DeviceModel, onToggle: () -> Unit) {
                 tint = if (device.status == "On") Color.Red else Color.Green
             )
         }
-    }
-}
-
-@Composable
-fun AddRoomDialog(
-    roomName: String,
-    floor: String,
-    onNameChange: (String) -> Unit,
-    onFloorChange: (String) -> Unit,
-    onDismiss: () -> Unit,
-    onAddRoom: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add New Room", color = Color.White) },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = roomName,
-                    onValueChange = onNameChange,
-                    label = { Text("Room Name") }
-                )
-                OutlinedTextField(
-                    value = floor,
-                    onValueChange = onFloorChange,
-                    label = { Text("Floor Number") }
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onAddRoom) {
-                Text("Add", color = Color(0xFFFFC107))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-        containerColor = Color(0xFF333333)
-    )
-}
-
-private suspend fun fetchRooms(
-    homeId: String,
-    onResult: (List<RoomModel>, String?) -> Unit
-) {
-    try {
-        val rooms = RemoteRepository.getRoomsForHome(homeId)
-        onResult(rooms, null)
-    } catch (e: Exception) {
-        onResult(emptyList(), "Failed to fetch rooms: ${e.message}")
     }
 }

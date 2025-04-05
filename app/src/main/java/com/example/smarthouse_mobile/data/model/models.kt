@@ -27,12 +27,8 @@ data class AddHomeRequest(
 )
 @JsonClass(generateAdapter = true)
 data class AddRoomRequest(
-    @Json(name = "room_name") val roomName: String,
-    @Json(name = "floor_number") val floorNumber: Int
+    @Json(name = "newRoomName") val newRoomName: String
 )
-
-
-
 
 @JsonClass(generateAdapter = true)
 data class EmergencyMode(
@@ -45,8 +41,7 @@ data class EmergencyMode(
 data class RoomModel(
     @Json(name = "_id") val id: String,
     @Json(name = "room_name") val name: String,
-    @Json(name = "devices") val devices: List<DeviceModel>,
-    @Json(name = "floor_number") val floorNumber: Int
+    @Json(name = "floor_number") val floorNumber: Int = 1
 )
 
 @JsonClass(generateAdapter = true)
