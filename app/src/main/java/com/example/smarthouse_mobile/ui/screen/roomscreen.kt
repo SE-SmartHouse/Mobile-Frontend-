@@ -54,7 +54,9 @@ fun RoomsScreen(homeId: String, navController: NavController) {
         }
     }
 
-    LaunchedEffect(Unit) { fetchRooms() }
+    LaunchedEffect(Unit) {
+        fetchRooms()
+    }
 
     Box(
         modifier = Modifier
@@ -75,7 +77,7 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                         RoomCard(
                             room = room,
                             onClick = {
-                                navController.navigate("devices/${room.id}/${room.name}")
+                                navController.navigate("devices/${room.id}/$homeId")
                             }
                         )
                     }
@@ -108,8 +110,7 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                 },
                 confirmButton = {
                     TextButton(onClick = { addRoom() }) {
-
-                    Text("Add", color = Color(0xFFFFC107))
+                        Text("Add", color = Color(0xFFFFC107))
                     }
                 },
                 dismissButton = {
@@ -134,28 +135,6 @@ fun RoomCard(room: RoomModel, onClick: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(room.name, color = Color.White, style = MaterialTheme.typography.titleLarge)
             Text("Floor ${room.floorNumber}", color = Color.Gray)
-        }
-    }
-}
-
-@Composable
-fun DeviceItem(device: DeviceModel, onToggle: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp)
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(device.deviceName, color = Color(0xFFFFC107), style = MaterialTheme.typography.bodyLarge)
-            Text("Status: ${device.status}", color = Color.Gray)
-        }
-        IconButton(onClick = onToggle) {
-            Icon(
-                imageVector = Icons.Default.PowerSettingsNew,
-                contentDescription = "Toggle",
-                tint = if (device.status == "On") Color.Red else Color.Green
-            )
         }
     }
 }

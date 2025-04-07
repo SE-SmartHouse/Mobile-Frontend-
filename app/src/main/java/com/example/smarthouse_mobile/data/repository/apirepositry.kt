@@ -5,6 +5,7 @@ import com.example.smarthouse_mobile.data.model.AddRoomRequest
 import com.example.smarthouse_mobile.data.model.DeviceModel
 import com.example.smarthouse_mobile.data.model.HomeModel
 import com.example.smarthouse_mobile.data.model.RoomModel
+import com.example.smarthouse_mobile.data.model.DeviceToggleRequest
 import com.example.smarthouse_mobile.data.model.StatusUpdate
 import com.example.smarthouse_mobile.data.model.ToggleDeviceRequest
 import com.example.smarthouse_mobile.data.model.UserModel
@@ -50,30 +51,9 @@ interface ApiService {
         @Body newHome: AddHomeRequest
     ): Response<HomeModel>
 
-    @POST("devices/{deviceId}/status")
-    suspend fun toggleDevice(
-        @Path("deviceId") deviceId: String,
-        @Header("Cookie") token: String,
-        @Body request: ToggleDeviceRequest
-    ): Response<Unit>
-
-
 
     @GET("homes/{homeId}")
     suspend fun getHome( @Header("Cookie") token: String ): Response<HomeModel>
-
-
-    @POST("homes/{homeId}/rooms/add")
-    suspend fun createRoom(
-        @Path("homeId") homeId: String,
-        @Body body: RequestBody
-    ): Response<Unit>
-
-    @POST("devices/{deviceId}/status")
-    suspend fun toggleDeviceStatus(
-        @Path("deviceId") deviceId: String,
-        @Body body: RequestBody
-    ): Response<Unit>
 
     @GET("homes/{homeId}/rooms")
     suspend fun getRooms(
@@ -95,14 +75,13 @@ interface ApiService {
         @Body request: AddRoomRequest
     ): Response<Unit>
 
-
-
-
     @POST("devices/{deviceId}/status")
-    suspend fun postDeviceStatus(
+    suspend fun toggleDeviceStatus(
         @Path("deviceId") deviceId: String,
-        @Body statusUpdate: StatusUpdate,
+        @Header("Cookie") token: String,
+        @Body body: DeviceToggleRequest
     ): Response<Unit>
+
 
 
     @POST("rooms/{roomId}/devices/{deviceId}/move")
@@ -112,9 +91,5 @@ interface ApiService {
         @Body newRoomId: String,
     ): Response<Unit>
 
-    @POST("homes/{homeId}/rooms/add")
-    suspend fun createRoom(
-        @Path("homeId") homeId: String,
-        @Body roomName: String,
-    ): Response<Unit>
+
 }

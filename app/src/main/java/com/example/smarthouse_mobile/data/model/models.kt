@@ -31,6 +31,13 @@ data class AddRoomRequest(
 )
 
 @JsonClass(generateAdapter = true)
+data class DeviceToggleRequest(
+    @Json(name = "home_id") val houseId: String,
+    @Json(name = "status") val deviceStatus: String
+
+    )
+
+@JsonClass(generateAdapter = true)
 data class EmergencyMode(
     @Json(name = "status") val status: String,
     @Json(name = "last_activated") val lastActivated: String?,

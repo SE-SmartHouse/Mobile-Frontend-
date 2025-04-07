@@ -102,20 +102,36 @@ object RemoteRepository {
         }
     }
 
-    suspend fun toggleDeviceStatus(deviceId: String, newStatus: String): Boolean {
+    suspend fun toggleDeviceStatus(deviceId: String, homeId: String, currentStatus: String): Boolean {
         return withContext(Dispatchers.IO) {
             try {
-                val json = JSONObject().apply {
-                    put("status", newStatus)
-                }
-                val body = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
+                //val newStatus = if (currentStatus.equals("on", true)) "off" else "on"
 
-                val response = api.toggleDeviceStatus(deviceId, body)
+                val request = DeviceToggleRequest(
+                    houseId = homeId,
+                    deviceStatus = currentStatus
+                )
+                Log.d("TOGGLE_DEVICE", " Sending toggle request:")
+                Log.d("TOGGLE_DEVICE", " Device ID: $deviceId")
+                Log.d("TOGGLE_DEVICE", " Home ID: $homeId")
+                Log.d("TOGGLE_DEVICE", " New Status: $currentStatus")
+                Log.d("TOGGLE_DEVICE", " Body: $request")
+
+                val response = api.toggleDeviceStatus(deviceId, sessionToken, request)
+
+
+                if (!response.isSuccessful) {
+                    Log.e("TOGGLE_DEVICE", " Failed with code: ${response.code()}")
+                } else {
+                    Log.d("TOGGLE_DEVICE", " Toggle successful!")
+                }
+
                 response.isSuccessful
             } catch (e: Exception) {
-                Log.e("ToggleDevice", "Error: ${e.message}")
+                Log.e("TOGGLE_DEVICE", "🔥 Exception: ${e.message}")
                 false
             }
         }
     }
+
 }

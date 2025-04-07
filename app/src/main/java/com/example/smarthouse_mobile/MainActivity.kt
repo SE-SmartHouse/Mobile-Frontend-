@@ -94,17 +94,16 @@ fun AppNavigation() {
                 )
             } ?: navController.navigate("home")
         }
-
         composable(
-            route = "devices/{roomId}/{roomName}",
+            "devices/{roomId}/{homeId}",
             arguments = listOf(
                 navArgument("roomId") { type = NavType.StringType },
-                navArgument("roomName") { type = NavType.StringType }
+                navArgument("homeId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
-            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
-            DeviceScreen(roomId = roomId, roomName = roomName)
+            val homeId = backStackEntry.arguments?.getString("homeId") ?: ""
+            DeviceScreen(roomId = roomId, homeId = homeId, navController = navController)
         }
     }
 }
