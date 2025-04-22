@@ -122,6 +122,7 @@ fun AddHomeDialog(onDismiss: () -> Unit, onAddHome: (String) -> Unit) {
                     onValueChange = { home_id = it },
                     label = { Text("Home ID") },
                     modifier = Modifier.fillMaxWidth()
+
                 )
 
             }
