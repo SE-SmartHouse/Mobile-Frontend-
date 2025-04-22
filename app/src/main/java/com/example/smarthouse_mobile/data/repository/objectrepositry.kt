@@ -54,9 +54,9 @@ object RemoteRepository {
         }
     }
 
-    suspend fun createHome(homeName: String, address: String): HomeModel? {
+    suspend fun createHome(homeId: String): HomeModel? {
         return withContext(Dispatchers.IO) {
-            val response = api.addHome(sessionToken, AddHomeRequest(homeName, address))
+            val response = api.addHome(sessionToken, AddHomeRequest(homeId))
             if (response.isSuccessful) response.body() else null
         }
     }

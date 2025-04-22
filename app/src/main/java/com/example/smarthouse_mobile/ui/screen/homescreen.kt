@@ -73,9 +73,9 @@ fun HomeScreen(
         if (showAddDialog) {
             AddHomeDialog(
                 onDismiss = { showAddDialog = false },
-                onAddHome = { name, address ->
+                onAddHome = { name ->
                     scope.launch {
-                        val newHome = RemoteRepository.createHome(name, address)
+                        val newHome = RemoteRepository.createHome(name)
                         if (newHome != null) {
                             homes = homes + newHome
                         }
@@ -109,9 +109,8 @@ fun HomeCard(home: HomeModel, onClick: () -> Unit) {
 }
 
 @Composable
-fun AddHomeDialog(onDismiss: () -> Unit, onAddHome: (String, String) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
+fun AddHomeDialog(onDismiss: () -> Unit, onAddHome: (String) -> Unit) {
+    var home_id by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -119,22 +118,16 @@ fun AddHomeDialog(onDismiss: () -> Unit, onAddHome: (String, String) -> Unit) {
         text = {
             Column {
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Home Name") },
+                    value = home_id,
+                    onValueChange = { home_id = it },
+                    label = { Text("Home ID") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = address,
-                    onValueChange = { address = it },
-                    label = { Text("Address") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+
             }
         },
         confirmButton = {
-            TextButton(onClick = { onAddHome(name, address) }) {
+            TextButton(onClick = { onAddHome(home_id) }) {
                 Text("Add")
             }
         },

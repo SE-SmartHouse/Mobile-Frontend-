@@ -22,8 +22,8 @@ data class HomeModel(
 
 @JsonClass(generateAdapter = true)
 data class AddHomeRequest(
-    @Json(name = "home_name") val homeName: String,
-    @Json(name = "address") val address: String
+    @Json(name = "home_id") val houseId: String,
+
 )
 @JsonClass(generateAdapter = true)
 data class AddRoomRequest(
