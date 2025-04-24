@@ -1,5 +1,6 @@
 package com.example.smarthouse_mobile.ui.screen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,6 +30,7 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         homes = RemoteRepository.getAllHomes()
+        Log.d("HomeScreen", "Fetched homes: $homes")
     }
 
     Box(
@@ -75,9 +77,9 @@ fun HomeScreen(
                 onDismiss = { showAddDialog = false },
                 onAddHome = { name ->
                     scope.launch {
-                        val newHome = RemoteRepository.createHome(name)
-                        if (newHome != null) {
-                            homes = homes + newHome
+                        val Success = RemoteRepository.createHome(name)
+                        if (Success) {
+                            homes = RemoteRepository.getAllHomes()
                         }
                         showAddDialog = false
                     }
@@ -122,7 +124,6 @@ fun AddHomeDialog(onDismiss: () -> Unit, onAddHome: (String) -> Unit) {
                     onValueChange = { home_id = it },
                     label = { Text("Home ID") },
                     modifier = Modifier.fillMaxWidth()
-
                 )
 
             }

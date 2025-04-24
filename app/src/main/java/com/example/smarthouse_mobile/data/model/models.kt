@@ -15,14 +15,14 @@ data class UserModel(
 )
 @JsonClass(generateAdapter = true)
 data class HomeModel(
-    @Json(name = "_id") val id: String,
+    @Json(name = "_id") val id: String? = null,
     @Json(name = "home_name") val homeName: String,
     @Json(name = "address") val address: String? = null
 )
 
 @JsonClass(generateAdapter = true)
 data class AddHomeRequest(
-    @Json(name = "home_id") val houseId: String,
+    @Json(name = "_id") val houseId: String,
 
 )
 @JsonClass(generateAdapter = true)

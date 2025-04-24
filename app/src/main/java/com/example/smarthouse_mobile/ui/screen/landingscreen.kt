@@ -36,8 +36,11 @@ fun LandingScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            Button(onClick = { navController.navigate("register") }) {
+                Text("New user?")
+            }
             Button(onClick = { navController.navigate("signin") }) {
-                Text("Get Started")
+                Text("Sign in")
             }
         }
     }

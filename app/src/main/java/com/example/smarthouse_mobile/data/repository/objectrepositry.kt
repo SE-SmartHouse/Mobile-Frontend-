@@ -42,8 +42,35 @@ object RemoteRepository {
             }
         }
     }
+    suspend fun registerUser(email: String, password: String, name: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = api.register(registerauth(email, password, name))
+                if (response.isSuccessful) {
+                    val rawCookie = response.headers()["Set-Cookie"]
+                    val extractedToken =
+                        rawCookie?.substringAfter("token=")?.substringBefore(";")?.trim()
 
-    suspend fun getAllHomes(): List<HomeModel> {
+                    return@withContext if (!extractedToken.isNullOrEmpty()) {
+                        sessionToken = "token=$extractedToken"
+                        Log.d("AUTH", "Registration successful. Token extracted: $sessionToken")
+                        true
+                    } else {
+                        Log.e("AUTH", "Registration failed: Token missing in Set-Cookie header.")
+                        false
+                    }
+                } else {
+                    Log.e("AUTH", "Registration failed: ${response.errorBody()?.string()}")
+                    false
+                }
+            } catch (e: Exception) {
+                Log.e("AUTH", "Exception during registration: ${e.message}", e)
+                false
+            }
+        }
+    }
+
+        suspend fun getAllHomes(): List<HomeModel> {
         return withContext(Dispatchers.IO) {
             val response = api.getHomes(sessionToken)
             if (response.isSuccessful) response.body() ?: emptyList()
@@ -54,10 +81,10 @@ object RemoteRepository {
         }
     }
 
-    suspend fun createHome(homeId: String): HomeModel? {
+    suspend fun createHome(homeId: String): Boolean {
         return withContext(Dispatchers.IO) {
-            val response = api.addHome(sessionToken, AddHomeRequest(homeId))
-            if (response.isSuccessful) response.body() else null
+            val response = api.addHome(sessionToken, homeId)
+            response.isSuccessful
         }
     }
 
