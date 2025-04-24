@@ -23,11 +23,11 @@ import com.example.smarthouse_mobile.data.model.UserModel
 import com.example.smarthouse_mobile.data.model.HomeModel
 import com.example.smarthouse_mobile.data.repository.RemoteRepository
 import com.example.smarthouse_mobile.ui.screen.DeviceScreen
+import com.example.smarthouse_mobile.ui.screen.RegisterScreen
 //import com.example.smarthouse_mobile.data.repository.MockRepository
 
 
 import com.example.smarthouse_mobile.ui.screen.RoomsScreen
-import com.example.smarthouse_mobile.ui.screen.authtoken
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,6 +67,15 @@ fun AppNavigation() {
                 loggedInUser = user
                 navController.navigate("home") {
                     popUpTo("signin") { inclusive = true }
+                }
+            }
+        }
+        composable("register") {
+            RegisterScreen(navController) { sessionToken, user ->
+                Log.d("Register", "Register Successfull successful, token: $sessionToken")
+                loggedInUser = user
+                navController.navigate("home") {
+                    popUpTo("register") { inclusive = true }
                 }
             }
         }

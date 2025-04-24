@@ -24,6 +24,13 @@ data class AuthRequest(
     @Json(name = "email") val email: String,
     @Json(name = "password") val password: String
 )
+
+data class registerauth(
+    @Json(name = "email") val email: String,
+    @Json(name = "password") val password: String,
+    @Json(name = "name") val name: String
+
+)
 data class LoginResponse(
     @Json(name = "token") val token: String? = null,
     @Json(name = "userId") val userId: String? = null,
@@ -33,7 +40,7 @@ interface ApiService {
 
 
     @POST("auth/register")
-    suspend fun register(@Body authRequest: AuthRequest): Response<Unit>
+    suspend fun register(@Body authRequest: registerauth): Response<LoginResponse>
 
 
     @POST("auth/login")
