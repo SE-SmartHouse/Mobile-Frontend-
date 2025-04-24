@@ -77,9 +77,9 @@ fun HomeScreen(
                 onDismiss = { showAddDialog = false },
                 onAddHome = { name ->
                     scope.launch {
-                        val newHome = RemoteRepository.createHome(name)
-                        if (newHome != null) {
-                            homes = homes + newHome
+                        val Success = RemoteRepository.createHome(name)
+                        if (Success) {
+                            homes = RemoteRepository.getAllHomes()
                         }
                         showAddDialog = false
                     }

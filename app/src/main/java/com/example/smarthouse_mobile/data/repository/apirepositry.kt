@@ -52,11 +52,11 @@ interface ApiService {
         @Header("Cookie") token: String
     ): Response<List<HomeModel>>
 
-    @POST("users/homes/add")
+    @POST("users/add/{homeID}")
     suspend fun addHome(
         @Header("Cookie") token: String,
-        @Body newHome: AddHomeRequest
-    ): Response<HomeModel>
+        @Path("homeID") homeId: String
+    ): Response<Unit>
 
 
     @GET("homes/{homeId}")
