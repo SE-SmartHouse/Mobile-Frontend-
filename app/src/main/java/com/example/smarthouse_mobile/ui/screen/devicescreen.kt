@@ -1,6 +1,5 @@
 package com.example.smarthouse_mobile.ui.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,23 +40,33 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
 
     fun toggleDeviceStatus(device: DeviceModel) {
         scope.launch {
-            val newStatus = if (device.status.equals("off", ignoreCase = true)) "on" else "off"
+            val newStatus = when (device.type?.lowercase()) {
+                "door", "window" -> if (device.status.equals("open", true)) "closed" else "open"
+                else -> if (device.status.equals("off", true)) "on" else "off"
+            }
+
             val success = RemoteRepository.toggleDeviceStatus(
                 deviceId = device.id,
                 homeId = homeId,
                 currentStatus = newStatus
             )
-            if (success) fetchDevices() else error = "Failed to toggle ${device.deviceName}"
+            if (success) {
+                fetchDevices()
+            } else {
+                error = "Failed to toggle ${device.deviceName}"
+            }
         }
     }
 
-    LaunchedEffect(Unit) { fetchDevices() }
+    LaunchedEffect(Unit) {
+        fetchDevices()
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Smart Devices", color = Color.White, fontSize = 22.sp) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E1E1E))
+                title = { Text("Devices in Room", color = Color.White) },
+                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color(0xFF333333))
             )
         },
         containerColor = Color(0xFF121212)
@@ -67,38 +75,24 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(16.dp)
         ) {
             when {
-                loading -> CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = Color(0xFFFFC107)
-                )
-                error != null -> Text(
-                    error ?: "Error",
-                    color = Color.Red,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-                else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                error != null -> Text(error ?: "Error", color = Color.Red)
+                else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(devices) { device ->
-                        val isOn = device.status.equals("on", ignoreCase = true)
-                        val statusColor = if (isOn) Color(0xFF00E676) else Color(0xFFE53935)
-                        val gradient = Brush.horizontalGradient(
-                            colors = if (isOn) listOf(Color(0xFF2E7D32), Color(0xFF66BB6A))
-                            else listOf(Color(0xFFB71C1C), Color(0xFFEF5350))
-                        )
+                        val displayStatus = getReadableStatus(device)
+                        val canToggle = isToggleSupported(device)
+                        val buttonLabel = getActionLabel(device)
 
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 100.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                            shape = MaterialTheme.shapes.large,
-                            elevation = CardDefaults.cardElevation(8.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
                         ) {
-                            Box(
+                            Column(
                                 modifier = Modifier
-                                    .background(gradient)
+                                    .fillMaxWidth()
                                     .padding(16.dp)
                             ) {
                                 Row(
@@ -110,30 +104,29 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
                                         Text(
                                             text = device.deviceName,
                                             fontSize = 20.sp,
-                                            color = Color.White
+                                            color = Color(0xFFFFC107)
                                         )
-                                        Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "Status: ${device.status}",
-                                            color = Color.White.copy(alpha = 0.8f)
+                                            text = "Status: $displayStatus",
+                                            color = Color.Gray,
+                                            fontSize = 14.sp
                                         )
                                     }
 
-                                    Button(
-                                        onClick = { toggleDeviceStatus(device) },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color.White,
-                                            contentColor = statusColor
-                                        ),
-                                        shape = MaterialTheme.shapes.medium
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.PowerSettingsNew,
-                                            contentDescription = "Toggle Power",
-                                            tint = statusColor
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(text = if (isOn) "Turn Off" else "Turn On")
+                                    if (canToggle) {
+                                        Button(
+                                            onClick = { toggleDeviceStatus(device) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = if (
+                                                    device.status.equals("off", true)
+                                                    || device.status.equals("closed", true)
+                                                ) Color(0xFFD32F2F)
+                                                else Color(0xFF388E3C),
+                                                contentColor = Color.White
+                                            )
+                                        ) {
+                                            Text(text = buttonLabel)
+                                        }
                                     }
                                 }
                             }
@@ -142,5 +135,29 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
                 }
             }
         }
+    }
+}
+
+
+
+fun getReadableStatus(device: DeviceModel): String {
+    return when (device.type?.lowercase()) {
+        "temperature", "humidity" -> "${device.status}°"
+        "window", "door" -> device.status.replaceFirstChar { it.uppercase() }
+        else -> device.status.replaceFirstChar { it.uppercase() }
+    }
+}
+
+fun isToggleSupported(device: DeviceModel): Boolean {
+    return when (device.type?.lowercase()) {
+        "light", "fan", "switch", "door", "window" -> true
+        else -> false
+    }
+}
+
+fun getActionLabel(device: DeviceModel): String {
+    return when (device.type?.lowercase()) {
+        "door", "window" -> if (device.status.equals("open", true)) "Close" else "Open"
+        else -> if (device.status.equals("on", true)) "Turn Off" else "Turn On"
     }
 }
