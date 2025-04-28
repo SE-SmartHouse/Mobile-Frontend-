@@ -55,7 +55,8 @@ data class RoomModel(
 data class DeviceModel(
     @Json(name = "_id") val id: String,
     @Json(name = "device_name") val deviceName: String,
-    val status: String
+    val status: String,
+    @Json(name = "device_type")val type: String? = null
 )
 
 data class StatusUpdate(
