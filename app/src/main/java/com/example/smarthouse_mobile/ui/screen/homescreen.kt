@@ -190,26 +190,26 @@ fun HomeScreen(
                         "SmartHouse",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF207DFC)
+                        color = Color.Black
                     )
                 },
                 actions = {
                     Text(
                         text = "Hi, ${user.name} 👋",
-                        color = Color.LightGray,
+                        color = Color.Black,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(end = 16.dp)
                     )
                 },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
-                    containerColor = Color(0xFF121212)
+                    containerColor = Color(0xFFFFC107)
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
-                containerColor = Color(0xFF207DFC),
+                containerColor = Color(0xFFFFC107),
                 contentColor = Color.Black
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Home")
@@ -225,10 +225,10 @@ fun HomeScreen(
         containerColor = Color(0xFF0E0E0E)
     ) { padding ->
         val blueShades = listOf(
-            Color(0xFF90CAF9), // Light Blue
-            Color(0xFF64B5F6), // Medium Blue
-            Color(0xFF42A5F5), // Deep Sky Blue
-            Color(0xFF2196F3)  // Strong Blue
+            Color(0xFFFFF9C4), // Light Blue
+            Color(0xFFFFF59D), // Medium Blue
+            Color(0xFFFFF176), // Deep Sky Blue
+            Color(0xFFFFEE58)  // Strong Blue
         )
 
         LazyVerticalGrid(
