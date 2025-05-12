@@ -109,8 +109,8 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Devices in Room", color = Color.White) },
-                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color(0xFF333333))
+                title = { Text("Devices in Room", color = Color.Black) },
+                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color(0xFFFFC107))
             )
         },
         containerColor = Color(0xFF121212)
