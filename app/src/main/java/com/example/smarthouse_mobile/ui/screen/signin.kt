@@ -53,7 +53,7 @@ fun SignInScreen(navController: NavController, onLoginSuccess: (String, UserMode
                 Text(
                     "Sign In",
                     fontSize = 26.sp,
-                    color = Color(0xFFFFC107),
+                    color = Color(0xFF207DFC),
                     style = MaterialTheme.typography.headlineLarge
                 )
 
@@ -62,12 +62,12 @@ fun SignInScreen(navController: NavController, onLoginSuccess: (String, UserMode
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email", color = Color(0xFFFFC107)) },
+                    label = { Text("Email", color = Color(0xFF207DFC)) },   //0xFFFFC107
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFFFC107),
-                        unfocusedBorderColor = Color(0xFFFFC107),
+                        focusedBorderColor = Color(0xFF207DFC),
+                        unfocusedBorderColor = Color(0xFF207DFC),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White
                     )
@@ -78,13 +78,13 @@ fun SignInScreen(navController: NavController, onLoginSuccess: (String, UserMode
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password", color = Color(0xFFFFC107)) },
+                    label = { Text("Password", color = Color(0xFF207DFC)) },
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFFFC107),
-                        unfocusedBorderColor = Color(0xFFFFC107),
+                        focusedBorderColor = Color(0xFF207DFC),
+                        unfocusedBorderColor = Color(0xFF207DFC),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White
                     )
@@ -123,7 +123,7 @@ fun SignInScreen(navController: NavController, onLoginSuccess: (String, UserMode
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF207DFC))
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))

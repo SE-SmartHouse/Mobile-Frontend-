@@ -32,7 +32,7 @@ fun LandingScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = "Welcome to Your Smart Home", fontSize = 24.sp, color = Color(0xFFFFC107))
+            Text(text = "Welcome to Your Smart Home", fontSize = 24.sp, color = Color(0xFF207DFC))
 
             Spacer(modifier = Modifier.height(8.dp))
 

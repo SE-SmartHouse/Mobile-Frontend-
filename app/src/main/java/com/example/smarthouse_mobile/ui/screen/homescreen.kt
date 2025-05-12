@@ -1,4 +1,4 @@
-package com.example.smarthouse_mobile.ui.screen
+/*package com.example.smarthouse_mobile.ui.screen
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -138,5 +138,214 @@ fun AddHomeDialog(onDismiss: () -> Unit, onAddHome: (String) -> Unit) {
                 Text("Cancel")
             }
         }
+    )
+}
+*/
+
+package com.example.smarthouse_mobile.ui.screen
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.*
+import coil.compose.AsyncImage
+import com.example.smarthouse_mobile.data.model.HomeModel
+import com.example.smarthouse_mobile.data.model.UserModel
+import com.example.smarthouse_mobile.data.repository.RemoteRepository
+import kotlinx.coroutines.launch
+import androidx.compose.ui.text.font.FontWeight
+import kotlin.math.absoluteValue
+
+
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreen(
+    user: UserModel,
+    onHouseClicked: (HomeModel) -> Unit
+) {
+    var homes by remember { mutableStateOf<List<HomeModel>>(emptyList()) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        homes = RemoteRepository.getAllHomes()
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "SmartHouse",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF207DFC)
+                    )
+                },
+                actions = {
+                    Text(
+                        text = "Hi, ${user.name} 👋",
+                        color = Color.LightGray,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                },
+                colors = TopAppBarDefaults.smallTopAppBarColors(
+                    containerColor = Color(0xFF121212)
+                )
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = Color(0xFF207DFC),
+                contentColor = Color.Black
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Home")
+            }
+        },
+        bottomBar = {
+            BottomAppBar(containerColor = Color(0xFF1A1A1A)) {
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = {}) { Icon(Icons.Default.Add, contentDescription = null, tint = Color.Gray) }
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        },
+        containerColor = Color(0xFF0E0E0E)
+    ) { padding ->
+        val blueShades = listOf(
+            Color(0xFF90CAF9), // Light Blue
+            Color(0xFF64B5F6), // Medium Blue
+            Color(0xFF42A5F5), // Deep Sky Blue
+            Color(0xFF2196F3)  // Strong Blue
+        )
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            itemsIndexed(homes) { index, home ->
+                val bgColor = blueShades[index % blueShades.size]
+                HomeCardGrid(home = home, bgColor = bgColor, onClick = { onHouseClicked(home) })
+            }
+        }
+
+
+        if (showAddDialog) {
+            AddHomeDialog(
+                onDismiss = { showAddDialog = false },
+                onAddHome = { name ->
+                    scope.launch {
+                        val success = RemoteRepository.createHome(name)
+                        if (success) {
+                            homes = RemoteRepository.getAllHomes()
+                        }
+                        showAddDialog = false
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun HomeCardGrid(home: HomeModel, bgColor: Color, onClick: () -> Unit) {
+    val imageUrl = "https://source.unsplash.com/featured/?smart,home,architecture"
+
+    ElevatedCard(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(160.dp),
+        colors = CardDefaults.cardColors(containerColor = bgColor),
+        elevation = CardDefaults.cardElevation(6.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = home.homeName.split(" ")
+                    .joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } },
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = home.address
+                    ?.split(" ")
+                    ?.joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } }
+                    ?: "No address",
+                fontSize = 14.sp,
+                color = Color(0xFF000000)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "House Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+        }
+    }
+}
+
+
+@Composable
+fun AddHomeDialog(
+    onDismiss: () -> Unit,
+    onAddHome: (String) -> Unit
+) {
+    var homeName by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Add New Home", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            OutlinedTextField(
+                value = homeName,
+                onValueChange = { homeName = it },
+                label = { Text("Home Name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(onClick = { onAddHome(homeName) }) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        containerColor = Color(0xFF1F1F1F),
+        titleContentColor = Color.White,
+        textContentColor = Color.White
     )
 }
