@@ -89,6 +89,11 @@ interface ApiService {
         @Body body: DeviceToggleRequest
     ): Response<Unit>
 
+    @GET("homes/{homeId}/sensors")
+    suspend fun getHomeSensors(
+        @Path("homeId") homeId: String,
+        @Header("Cookie") token: String
+    ): Response<List<DeviceModel>>
 
 
     @POST("rooms/{roomId}/devices/{deviceId}/move")

@@ -4,17 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.smarthouse_mobile.data.model.DeviceModel
 import com.example.smarthouse_mobile.data.model.RoomModel
+import com.example.smarthouse_mobile.data.model.DeviceModel
 import com.example.smarthouse_mobile.data.repository.RemoteRepository
 import kotlinx.coroutines.launch
 
@@ -26,27 +25,52 @@ fun RoomsScreen(homeId: String, navController: NavController) {
     var error by remember { mutableStateOf<String?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
     var newRoomName by remember { mutableStateOf("") }
+    var roomTemperatures by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
 
-    fun fetchRooms() {
+    fun fetchRoomsAndTemperatures() {
         scope.launch {
             loading = true
             error = null
             try {
                 rooms = RemoteRepository.getRoomsForHome(homeId)
+                android.util.Log.d("TEMP_DEBUG", "Fetched Rooms: ${rooms.map { it.name to it.id }}")
+
+                val sensors = RemoteRepository.getSensorsForHome(homeId)
+                android.util.Log.d("TEMP_DEBUG", "Fetched Sensors: ${sensors.map { it.deviceName to it.type to it.status }}")
+
+                val temperatureSensors = sensors.filter { it.type.equals("temperature", true) }
+                android.util.Log.d("TEMP_DEBUG", "Temperature Sensors: ${temperatureSensors.map { it.deviceName to it.status }}")
+
+                val tempMap = mutableMapOf<String, String>()
+                rooms.forEach { room ->
+                    val sensor = temperatureSensors.find {
+                        it.deviceName.contains(room.name, ignoreCase = true)
+                    }
+                    android.util.Log.d("TEMP_DEBUG", "Matching sensor for room '${room.name}': ${sensor?.deviceName} -> ${sensor?.status}")
+                    if (sensor != null) {
+                        tempMap[room.id] = sensor.status
+                    }
+                }
+
+                roomTemperatures = tempMap
+                android.util.Log.d("TEMP_DEBUG", "Final Room Temperatures Map: $roomTemperatures")
+
             } catch (e: Exception) {
                 error = e.message ?: "Unknown error"
+                android.util.Log.e("TEMP_DEBUG", "Exception while fetching temps: ${e.message}")
             } finally {
                 loading = false
             }
         }
     }
 
+
     fun addRoom() {
         scope.launch {
             if (newRoomName.isNotBlank()) {
                 val success = RemoteRepository.createRoom(homeId, newRoomName.trim())
                 if (success) {
-                    fetchRooms()
+                    fetchRoomsAndTemperatures()
                     showAddDialog = false
                     newRoomName = ""
                 }
@@ -55,7 +79,7 @@ fun RoomsScreen(homeId: String, navController: NavController) {
     }
 
     LaunchedEffect(Unit) {
-        fetchRooms()
+        fetchRoomsAndTemperatures()
     }
 
     Box(
@@ -74,11 +98,11 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                 rooms.isEmpty() -> Text("No rooms found.", color = Color.Gray)
                 else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(rooms) { room ->
+                        val temp = roomTemperatures[room.id]
                         RoomCard(
                             room = room,
-                            onClick = {
-                                navController.navigate("devices/${room.id}/$homeId")
-                            }
+                            temperature = temp,
+                            onClick = { navController.navigate("devices/${room.id}/$homeId") }
                         )
                     }
                 }
@@ -125,7 +149,7 @@ fun RoomsScreen(homeId: String, navController: NavController) {
 }
 
 @Composable
-fun RoomCard(room: RoomModel, onClick: () -> Unit) {
+fun RoomCard(room: RoomModel, temperature: String?, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -133,8 +157,18 @@ fun RoomCard(room: RoomModel, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(room.name, color = Color.White, style = MaterialTheme.typography.titleLarge)
-            Text("Floor ${room.floorNumber}", color = Color.Gray)
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    Text(room.name, color = Color.White, style = MaterialTheme.typography.titleLarge)
+                    Text("Floor ${room.floorNumber}", color = Color.Gray)
+                }
+                temperature?.let {
+                    Text(text = "$it°", color = Color.White, fontSize = 18.sp)
+                }
+            }
         }
     }
 }
