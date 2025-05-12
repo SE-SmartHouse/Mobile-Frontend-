@@ -69,18 +69,18 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                         text = "Rooms",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF207DFC)
+                        color = Color.Black
                     )
                 },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
-                    containerColor = Color(0xFF121212)
+                    containerColor = Color(0xFFFFC107)
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
-                containerColor = Color(0xFF207DFC),
+                containerColor = Color(0xFFFFC107),
                 contentColor = Color.Black
             ) {
                 Text("+", fontWeight = FontWeight.Bold)
@@ -138,7 +138,7 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                 },
                 confirmButton = {
                     TextButton(onClick = { addRoom() }) {
-                        Text("Add", color = Color(0xFF207DFC))
+                        Text("Add", color = Color(0xFFFFC107))
                     }
                 },
                 dismissButton = {
