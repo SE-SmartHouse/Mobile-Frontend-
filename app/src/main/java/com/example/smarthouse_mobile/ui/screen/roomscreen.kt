@@ -1,22 +1,26 @@
 package com.example.smarthouse_mobile.ui.screen
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.smarthouse_mobile.data.model.RoomModel
-import com.example.smarthouse_mobile.data.model.DeviceModel
 import com.example.smarthouse_mobile.data.repository.RemoteRepository
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun RoomsScreen(homeId: String, navController: NavController) {
     val scope = rememberCoroutineScope()
@@ -25,52 +29,27 @@ fun RoomsScreen(homeId: String, navController: NavController) {
     var error by remember { mutableStateOf<String?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
     var newRoomName by remember { mutableStateOf("") }
-    var roomTemperatures by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
 
-    fun fetchRoomsAndTemperatures() {
+    fun fetchRooms() {
         scope.launch {
             loading = true
             error = null
             try {
                 rooms = RemoteRepository.getRoomsForHome(homeId)
-                android.util.Log.d("TEMP_DEBUG", "Fetched Rooms: ${rooms.map { it.name to it.id }}")
-
-                val sensors = RemoteRepository.getSensorsForHome(homeId)
-                android.util.Log.d("TEMP_DEBUG", "Fetched Sensors: ${sensors.map { it.deviceName to it.type to it.status }}")
-
-                val temperatureSensors = sensors.filter { it.type.equals("temperature", true) }
-                android.util.Log.d("TEMP_DEBUG", "Temperature Sensors: ${temperatureSensors.map { it.deviceName to it.status }}")
-
-                val tempMap = mutableMapOf<String, String>()
-                rooms.forEach { room ->
-                    val sensor = temperatureSensors.find {
-                        it.deviceName.contains(room.name, ignoreCase = true)
-                    }
-                    android.util.Log.d("TEMP_DEBUG", "Matching sensor for room '${room.name}': ${sensor?.deviceName} -> ${sensor?.status}")
-                    if (sensor != null) {
-                        tempMap[room.id] = sensor.status
-                    }
-                }
-
-                roomTemperatures = tempMap
-                android.util.Log.d("TEMP_DEBUG", "Final Room Temperatures Map: $roomTemperatures")
-
             } catch (e: Exception) {
                 error = e.message ?: "Unknown error"
-                android.util.Log.e("TEMP_DEBUG", "Exception while fetching temps: ${e.message}")
             } finally {
                 loading = false
             }
         }
     }
 
-
     fun addRoom() {
         scope.launch {
             if (newRoomName.isNotBlank()) {
                 val success = RemoteRepository.createRoom(homeId, newRoomName.trim())
                 if (success) {
-                    fetchRoomsAndTemperatures()
+                    fetchRooms()
                     showAddDialog = false
                     newRoomName = ""
                 }
@@ -79,44 +58,69 @@ fun RoomsScreen(homeId: String, navController: NavController) {
     }
 
     LaunchedEffect(Unit) {
-        fetchRoomsAndTemperatures()
+        fetchRooms()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF121212))
-            .padding(16.dp)
-    ) {
-        Column {
-            Text("Rooms", color = Color(0xFFFFC107), style = MaterialTheme.typography.headlineLarge)
-            Spacer(modifier = Modifier.height(16.dp))
-
+    Scaffold(
+        topBar = {
+            SmallTopAppBar(
+                title = {
+                    Text(
+                        text = "Rooms",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF207DFC)
+                    )
+                },
+                colors = TopAppBarDefaults.smallTopAppBarColors(
+                    containerColor = Color(0xFF121212)
+                )
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = Color(0xFF207DFC),
+                contentColor = Color.Black
+            ) {
+                Text("+", fontWeight = FontWeight.Bold)
+            }
+        },
+        containerColor = Color(0xFF0E0E0E)
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .padding(horizontal = 16.dp)
+                .fillMaxSize()
+        ) {
             when {
-                loading -> CircularProgressIndicator(color = Color.White)
-                error != null -> Text(error ?: "Error", color = Color.Red)
-                rooms.isEmpty() -> Text("No rooms found.", color = Color.Gray)
-                else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(rooms) { room ->
-                        val temp = roomTemperatures[room.id]
-                        RoomCard(
-                            room = room,
-                            temperature = temp,
-                            onClick = { navController.navigate("devices/${room.id}/$homeId") }
-                        )
+                loading -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Color.White)
+                    }
+                }
+                error != null -> {
+                    Text(error ?: "Error", color = Color.Red)
+                }
+                rooms.isEmpty() -> {
+                    Text("No rooms found.", color = Color.Gray)
+                }
+                else -> {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(rooms) { room ->
+                            RoomCardMinimal(room = room) {
+                                navController.navigate("devices/${room.id}/$homeId")
+                            }
+                        }
                     }
                 }
             }
-        }
-
-        FloatingActionButton(
-            onClick = { showAddDialog = true },
-            containerColor = Color(0xFFFFC107),
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Text("+", color = Color.Black)
         }
 
         if (showAddDialog) {
@@ -134,7 +138,7 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                 },
                 confirmButton = {
                     TextButton(onClick = { addRoom() }) {
-                        Text("Add", color = Color(0xFFFFC107))
+                        Text("Add", color = Color(0xFF207DFC))
                     }
                 },
                 dismissButton = {
@@ -149,26 +153,38 @@ fun RoomsScreen(homeId: String, navController: NavController) {
 }
 
 @Composable
-fun RoomCard(room: RoomModel, temperature: String?, onClick: () -> Unit) {
-    Card(
+fun RoomCardMinimal(room: RoomModel, onClick: () -> Unit) {
+    ElevatedCard(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .padding(horizontal = 4.dp)
+            .height(140.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF2C2C2C)
+        ),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column {
-                    Text(room.name, color = Color.White, style = MaterialTheme.typography.titleLarge)
-                    Text("Floor ${room.floorNumber}", color = Color.Gray)
-                }
-                temperature?.let {
-                    Text(text = "$it°", color = Color.White, fontSize = 18.sp)
-                }
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = room.name.split(" ")
+                    .joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } },
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White
+            )
+            Text(
+                text = "Floor ${room.floorNumber}",
+                fontSize = 14.sp,
+                color = Color.White
+            )
         }
     }
 }

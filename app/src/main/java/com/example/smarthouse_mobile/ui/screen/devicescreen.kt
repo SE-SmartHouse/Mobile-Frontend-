@@ -4,9 +4,12 @@ import android.content.Intent
 import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.*
@@ -22,8 +25,11 @@ import com.example.smarthouse_mobile.data.model.DeviceModel
 import com.example.smarthouse_mobile.data.repository.RemoteRepository
 import kotlinx.coroutines.launch
 import java.util.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.ui.text.font.FontWeight
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
     val scope = rememberCoroutineScope()
@@ -109,84 +115,91 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
         },
         containerColor = Color(0xFF121212)
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Button(
-                    onClick = {
-                        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                            putExtra(
-                                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-                            )
-                            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-                            putExtra(RecognizerIntent.EXTRA_PROMPT, "Say a command like 'Turn on light'")
-                        }
-                        voiceLauncher.launch(intent)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
-                ) {
-                    Text(" Voice Command", color = Color.Black)
+            Button(
+                onClick = {
+                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                        putExtra(
+                            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                        )
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                        putExtra(RecognizerIntent.EXTRA_PROMPT, "Say a command like 'Turn on light'")
+                    }
+                    voiceLauncher.launch(intent)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC107))
+            ) {
+                Text(" Voice Command", color = Color.Black)
+            }
+
+            when {
+                loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color.White)
                 }
+                error != null -> Text(error ?: "Error", color = Color.Red)
+                else -> LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(devices) { device ->
+                        val canToggle = isToggleSupported(device)
+                        val buttonLabel = getActionLabel(device)
 
-                when {
-                    loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                    error != null -> Text(error ?: "Error", color = Color.Red)
-                    else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(devices) { device ->
-//                            val displayStatus = getReadableStatus(device)
-                            val canToggle = isToggleSupported(device)
-                            val buttonLabel = getActionLabel(device)
-
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+                        ElevatedCard(
+                            shape = RoundedCornerShape(20.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    Text(
+                                        text = device.deviceName,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.White
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.PowerSettingsNew,
+                                        contentDescription = null,
+                                        tint = Color.White
+                                    )
+                                }
+                                if (canToggle) {
+                                    Button(
+                                        onClick = { toggleDeviceStatus(device) },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (
+                                                device.status.equals("off", true)
+                                                || device.status.equals("closed", true)
+                                            ) Color(0xFFD32F2F)
+                                            else Color(0xFF388E3C),
+                                            contentColor = Color.White
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Column {
-                                            Text(
-                                                text = device.deviceName,
-                                                fontSize = 20.sp,
-                                                color = Color(0xFFFFC107)
-                                            )
-//                                            Text(
-//                                                text = "Status: $displayStatus",
-//                                                color = Color.Gray,
-//                                                fontSize = 14.sp
-//                                            )
-                                        }
-
-                                        if (canToggle) {
-                                            Button(
-                                                onClick = { toggleDeviceStatus(device) },
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = if (
-                                                        device.status.equals("off", true)
-                                                        || device.status.equals("closed", true)
-                                                    ) Color(0xFFD32F2F)
-                                                    else Color(0xFF388E3C),
-                                                    contentColor = Color.White
-                                                )
-                                            ) {
-                                                Text(text = buttonLabel)
-                                            }
-                                        }
+                                        Text(text = buttonLabel)
                                     }
                                 }
                             }
@@ -197,14 +210,6 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
         }
     }
 }
-
-//fun getReadableStatus(device: DeviceModel): String {
-//    return when (device.type?.lowercase()) {
-//        "temperature", "humidity" -> "${device.status}°"
-//        "window", "door" -> device.status.replaceFirstChar { it.uppercase() }
-//        else -> device.status.replaceFirstChar { it.uppercase() }
-//    }
-//}
 
 fun isToggleSupported(device: DeviceModel): Boolean {
     return when (device.type?.lowercase()) {
