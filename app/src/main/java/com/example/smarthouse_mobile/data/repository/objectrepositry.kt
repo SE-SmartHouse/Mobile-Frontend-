@@ -88,6 +88,23 @@ object RemoteRepository {
         }
     }
 
+    suspend fun getSensorsForHome(homeId: String): List<DeviceModel> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = api.getHomeSensors(homeId, sessionToken)
+                if (response.isSuccessful) {
+                    response.body() ?: emptyList()
+                } else {
+                    Log.e("Sensors", "Error: ${response.code()} ${response.message()}")
+                    emptyList()
+                }
+            } catch (e: Exception) {
+                Log.e("Sensors", "Exception: ${e.message}")
+                emptyList()
+            }
+        }
+    }
+
     suspend fun getRoomsForHome(homeId: String): List<RoomModel> {
         return withContext(Dispatchers.IO) {
             val response = api.getRooms(homeId, sessionToken)
