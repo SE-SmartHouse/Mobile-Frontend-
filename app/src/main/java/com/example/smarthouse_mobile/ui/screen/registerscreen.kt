@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(navController: NavController, onRegisterSuccess: (String, UserModel) -> Unit) {
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -59,9 +59,9 @@ fun RegisterScreen(navController: NavController, onRegisterSuccess: (String, Use
                 Spacer(modifier = Modifier.height(20.dp))
 
                 OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = { Text("Username", color = Color(0xFFFFC107)) },
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("email", color = Color(0xFFFFC107)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -112,7 +112,7 @@ fun RegisterScreen(navController: NavController, onRegisterSuccess: (String, Use
                         coroutineScope.launch {
                             isLoading = true
                             errorMessage = null
-                            val success = RemoteRepository.registerUser(username, password, name)
+                            val success = RemoteRepository.registerUser(email, password, name)
                             isLoading = false
 
                             if (success) {
@@ -120,7 +120,7 @@ fun RegisterScreen(navController: NavController, onRegisterSuccess: (String, Use
                                 val user = UserModel(
                                     id = "",
                                     name = name,
-                                    email = username,
+                                    email =email,
                                     password = password,
                                     role = "user",
                                     homeId = homes.firstOrNull()?.id ?: ""
