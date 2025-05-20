@@ -54,8 +54,8 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
     fun toggleDeviceStatus(device: DeviceModel, desiredStatus: String? = null) {
         scope.launch {
             val newStatus = desiredStatus ?: when (device.type?.lowercase()) {
-                "door", "window" -> if (device.status.equals("open", true)) "closed" else "open"
-                else -> if (device.status.equals("off", true)) "on" else "off"
+                "door", "window" -> if (device.status.equals("Open", true)) "Closed" else "Open"
+                else -> if (device.status.equals("Off", true)) "On" else "Off"
             }
 
             val success = RemoteRepository.toggleDeviceStatus(
@@ -89,8 +89,8 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
 
                 if (turnOn || turnOff) {
                     val newStatus = when (matchedDevice.type?.lowercase()) {
-                        "door", "window" -> if (turnOn) "open" else "closed"
-                        else -> if (turnOn) "on" else "off"
+                        "door", "window" -> if (turnOn) "Open" else "Closed"
+                        else -> if (turnOn) "On" else "Off"
                     }
                     toggleDeviceStatus(matchedDevice, newStatus)
                 } else {
@@ -191,8 +191,8 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
                                         onClick = { toggleDeviceStatus(device) },
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = if (
-                                                device.status.equals("off", true)
-                                                || device.status.equals("closed", true)
+                                                device.status.equals("Off", true)
+                                                || device.status.equals("Closed", true)
                                             ) Color(0xFFD32F2F)
                                             else Color(0xFF388E3C),
                                             contentColor = Color.White
@@ -213,14 +213,14 @@ fun DeviceScreen(roomId: String, homeId: String, navController: NavController) {
 
 fun isToggleSupported(device: DeviceModel): Boolean {
     return when (device.type?.lowercase()) {
-        "lighting", "cooler", "door", "window" -> true
+        "light", "fan", "door", "window" -> true
         else -> false
     }
 }
 
 fun getActionLabel(device: DeviceModel): String {
     return when (device.type?.lowercase()) {
-        "door", "window" -> if (device.status.equals("open", true)) "Close" else "Open"
-        else -> if (device.status.equals("on", true)) "Turn Off" else "Turn On"
+        "door", "window" -> if (device.status.equals("Open", true)) "Close" else "Open"
+        else -> if (device.status.equals("On", true)) "Turn Off" else "Turn On"
     }
 }

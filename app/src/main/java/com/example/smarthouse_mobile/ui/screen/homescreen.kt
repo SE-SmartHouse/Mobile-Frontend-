@@ -560,6 +560,7 @@ fun HomeCardGrid(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddHomeDialog(
     onDismiss: () -> Unit,
@@ -576,11 +577,21 @@ fun AddHomeDialog(
             OutlinedTextField(
                 value = homeName,
                 onValueChange = { homeName = it },
-                label = { Text(text = "Home Name", color = Color.White ) },
+                label = { Text("Home Name") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-
+                textStyle = LocalTextStyle.current.copy(color = Color.White),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color(0xFFFFC107),
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.LightGray
+                )
             )
+
         },
         confirmButton = {
             Button(onClick = { onAddHome(homeName) }) {
