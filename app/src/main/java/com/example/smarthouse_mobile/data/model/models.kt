@@ -1,5 +1,6 @@
 package com.example.smarthouse_mobile.data.model
 
+import com.example.smarthouse_mobile.data.repository.SensorModel
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
@@ -61,6 +62,11 @@ data class DeviceModel(
 
 data class StatusUpdate(
     val status: Boolean
+)
+
+@JsonClass(generateAdapter = true)
+data class SensorResponse(
+    @Json(name = "data") val data: List<SensorModel>
 )
 
 @JsonClass(generateAdapter = true)

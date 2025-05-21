@@ -6,6 +6,7 @@ import com.example.smarthouse_mobile.data.model.DeviceModel
 import com.example.smarthouse_mobile.data.model.HomeModel
 import com.example.smarthouse_mobile.data.model.RoomModel
 import com.example.smarthouse_mobile.data.model.DeviceToggleRequest
+import com.example.smarthouse_mobile.data.model.SensorResponse
 import com.example.smarthouse_mobile.data.model.StatusUpdate
 import com.example.smarthouse_mobile.data.model.ToggleDeviceRequest
 import com.example.smarthouse_mobile.data.model.UserModel
@@ -35,6 +36,16 @@ data class LoginResponse(
     @Json(name = "token") val token: String? = null,
     @Json(name = "userId") val userId: String? = null,
     @Json(name = "message") val message: String? = null
+)
+
+data class SensorModel(
+    @Json(name = "device_id") val deviceId: String,
+    @Json(name = "device_name") val deviceName: String,
+    @Json(name = "device_type") val deviceType: String,
+    @Json(name = "status") val status: String,
+    @Json(name = "reading") val reading: String,
+    @Json(name = "unit") val unit: String,
+    @Json(name = "timestamp") val timestamp: String
 )
 interface ApiService {
 
@@ -93,7 +104,7 @@ interface ApiService {
     suspend fun getHomeSensors(
         @Path("homeId") homeId: String,
         @Header("Cookie") token: String
-    ): Response<List<DeviceModel>>
+    ): Response<SensorResponse>
 
 
     @POST("rooms/{roomId}/devices/{deviceId}/move")

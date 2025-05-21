@@ -10,6 +10,7 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
+
 object RemoteRepository {
     private val api = RetrofitClient.instance
     var sessionToken: String = ""
@@ -88,22 +89,32 @@ object RemoteRepository {
         }
     }
 
-    suspend fun getSensorsForHome(homeId: String): List<DeviceModel> {
+    suspend fun getSensorsForHome(homeId: String): List<SensorModel> {
         return withContext(Dispatchers.IO) {
             try {
+                Log.d("Sensors", "Fetching sensors for homeId: $homeId")
+                Log.d("Sensors", "Session token: $sessionToken")
+
                 val response = api.getHomeSensors(homeId, sessionToken)
+
+                Log.d("Sensors", "Response code: ${response.code()}")
+                Log.d("Sensors", "Response message: ${response.message()}")
+
                 if (response.isSuccessful) {
-                    response.body() ?: emptyList()
+                    val devices = response.body()?.data ?: emptyList()
+                    Log.d("Sensors", "Fetched sensors: $devices")
+                    devices
                 } else {
-                    Log.e("Sensors", "Error: ${response.code()} ${response.message()}")
+                    Log.e("Sensors", "Error response: ${response.errorBody()?.string()}")
                     emptyList()
                 }
             } catch (e: Exception) {
-                Log.e("Sensors", "Exception: ${e.message}")
+                Log.e("Sensors", "Exception occurred: ${e.message}", e)
                 emptyList()
             }
         }
     }
+
 
     suspend fun getRoomsForHome(homeId: String): List<RoomModel> {
         return withContext(Dispatchers.IO) {
