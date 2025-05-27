@@ -1,7 +1,6 @@
 package com.example.smarthouse_mobile.ui.screen
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -29,6 +28,8 @@ fun RoomsScreen(homeId: String, navController: NavController) {
     var error by remember { mutableStateOf<String?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
     var newRoomName by remember { mutableStateOf("") }
+    var temperature by remember { mutableStateOf("Loading...") }
+    var humidity by remember { mutableStateOf("Loading...") }
 
     fun fetchRooms() {
         scope.launch {
@@ -40,6 +41,21 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                 error = e.message ?: "Unknown error"
             } finally {
                 loading = false
+            }
+        }
+    }
+
+    fun fetchSensorData() {
+        scope.launch {
+            try {
+                val sensors = RemoteRepository.getSensorsForHome(homeId)
+                val tempSensor = sensors.find { it.unit.equals("C", ignoreCase = true) }
+                val humSensor =  sensors.find { it.unit == "%" }
+                temperature = tempSensor?.reading ?: "N/A"
+                humidity = humSensor?.reading ?: "N/A"
+            } catch (e: Exception) {
+                temperature = "Error"
+                humidity = "Error"
             }
         }
     }
@@ -59,6 +75,7 @@ fun RoomsScreen(homeId: String, navController: NavController) {
 
     LaunchedEffect(Unit) {
         fetchRooms()
+        fetchSensorData()
     }
 
     Scaffold(
@@ -94,6 +111,36 @@ fun RoomsScreen(homeId: String, navController: NavController) {
                 .padding(horizontal = 16.dp)
                 .fillMaxSize()
         ) {
+
+            // DASHBOARD FOR TEMP + HUMIDITY
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1C))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text("Home Environment", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column {
+                            Text("Temperature", color = Color.Gray, fontSize = 14.sp)
+                            Text(temperature, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Column {
+                            Text("Humidity", color = Color.Gray, fontSize = 14.sp)
+                            Text(humidity, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            }
+
+            // ROOMS GRID
             when {
                 loading -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -123,6 +170,7 @@ fun RoomsScreen(homeId: String, navController: NavController) {
             }
         }
 
+        // DIALOG FOR NEW ROOM
         if (showAddDialog) {
             AlertDialog(
                 onDismissRequest = { showAddDialog = false },
