@@ -62,7 +62,7 @@ fun HomeScreen(
                 },
                 actions = {
                     Text(
-                        text = "Hi, ${user.name} 👋",
+                        text = "Hi, ${user.name}",
                         color = Color.Black,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(end = 16.dp)
@@ -229,7 +229,7 @@ fun AddHomeDialog(
             OutlinedTextField(
                 value = homeName,
                 onValueChange = { homeName = it },
-                label = { Text("Home Name") },
+                label = { Text("Home ID") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = LocalTextStyle.current.copy(color = Color.White),
